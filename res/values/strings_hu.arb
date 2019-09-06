@@ -7,4 +7,5 @@
   "cant_get_current_location": "Nem működik a helymeghatározás",
   "please_make_sure_you_enable_gps_and_try_again": "Kérlek győződj meg arról, hogy a helymeghatározás be van kapcsolva, majd próbáld újra",
   "search_place": "Keressen itt"
+  "finding_place": "Hely keresése..."
 }

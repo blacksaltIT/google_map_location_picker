@@ -29,6 +29,7 @@ class S implements WidgetsLocalizations {
   String get please_make_sure_you_enable_gps_and_try_again => "Please make sure you enable GPS and try again";
   String get search_place => "Search place";
   String get server_error => "Server error";
+  String get finding_place => "Finding place...";
 }
 
 class $ar extends S {
@@ -53,6 +54,8 @@ class $ar extends S {
   String get please_check_your_connection => "تأكد من وجود انترنت";
   @override
   String get please_make_sure_you_enable_gps_and_try_again => "الرجاء التاكد من تفعيل الGPS و المحاولة مرة أخري";
+  @override
+  String get finding_place => "zagyvaság";
 }
 
 class $hu extends S {
@@ -77,6 +80,8 @@ class $hu extends S {
   String get please_check_your_connection => "Kérlek ellenőrizd a hálózati kapcsolatodat";
   @override
   String get please_make_sure_you_enable_gps_and_try_again => "Kérlek győződj meg arról, hogy a helymeghatározás be van kapcsolva, majd próbáld újra";
+  @override
+  String get finding_place => "Hely keresése...";
 }
 
 class $en extends S {
