@@ -55,6 +55,30 @@ class $ar extends S {
   String get please_make_sure_you_enable_gps_and_try_again => "الرجاء التاكد من تفعيل الGPS و المحاولة مرة أخري";
 }
 
+class $hu extends S {
+  const $hu();
+
+  @override
+  TextDirection get textDirection => TextDirection.rtl;
+
+  @override
+  String get cant_get_current_location => "Nem működik a helymeghatározás";
+  @override
+  String get access_to_location_denied => "Helymeghatározás hozzáférése megtagadva";
+  @override
+  String get allow_access_to_the_location_services => "Kérlek engedélyezd a helymeghatározást";
+  @override
+  String get server_error => "Szerverhiba";
+  @override
+  String get search_place => "Keressen itt";
+  @override
+  String get ok => "Ok";
+  @override
+  String get please_check_your_connection => "Kérlek ellenőrizd a hálózati kapcsolatodat";
+  @override
+  String get please_make_sure_you_enable_gps_and_try_again => "Kérlek győződj meg arról, hogy a helymeghatározás be van kapcsolva, majd próbáld újra";
+}
+
 class $en extends S {
   const $en();
 }
@@ -66,6 +90,7 @@ class GeneratedLocalizationsDelegate extends LocalizationsDelegate<S> {
     return const <Locale>[
       Locale("ar", ""),
       Locale("en", ""),
+      Locale("hu", "HU"),
     ];
   }
 
@@ -88,13 +113,21 @@ class GeneratedLocalizationsDelegate extends LocalizationsDelegate<S> {
   @override
   Future<S> load(Locale locale) {
     final String lang = getLang(locale);
+    
     if (lang != null) {
-      switch (lang) {
+      var langFirst = lang;
+      if(lang.contains("_"))
+        langFirst = lang.substring(0, lang.indexOf("_"));
+      
+      switch (langFirst) {
         case "ar":
           S.current = const $ar();
           return SynchronousFuture<S>(S.current);
         case "en":
           S.current = const $en();
+          return SynchronousFuture<S>(S.current);
+        case "hu":
+          S.current = const $hu();
           return SynchronousFuture<S>(S.current);
         default:
           // NO-OP.

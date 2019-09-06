@@ -359,12 +359,16 @@ class LocationPickerState extends State<LocationPicker> {
       child: Builder(builder: (context) {
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop()),
             iconTheme: IconThemeData(color: Colors.black),
             key: appBarKey,
-            title: SearchInput(
-              (input) => searchPlace(input),
-              key: searchInputKey,
+            titleSpacing: 0,
+            title: Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: SearchInput(
+                (input) => searchPlace(input),
+                key: searchInputKey,
+              ),
             ),
           ),
           body: MapPicker(

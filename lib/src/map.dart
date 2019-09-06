@@ -48,6 +48,10 @@ class MapPickerState extends State<MapPicker> {
     setState(() => _currentMapType = nextType);
   }
 
+  void _onCurrentLocation() {
+    _initCurrentLocation();
+  }
+
   // this also checks for location permission.
   Future<void> _initCurrentLocation() async {
     Position currentPosition;
@@ -124,9 +128,11 @@ class MapPickerState extends State<MapPicker> {
 //            },
             mapType: _currentMapType,
             myLocationEnabled: true,
+            myLocationButtonEnabled: false,
           ),
           _MapFabs(
             onToggleMapTypePressed: _onToggleMapTypePressed,
+            onCurrentLocation: _onCurrentLocation,
           ),
           pin(),
           locationCard(),
@@ -139,7 +145,7 @@ class MapPickerState extends State<MapPicker> {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 30),
         child: Card(
           child: Padding(
             padding: const EdgeInsets.all(8),
@@ -184,7 +190,7 @@ class MapPickerState extends State<MapPicker> {
                         )
                       });
                     },
-                    child: Icon(Icons.arrow_forward, color: Colors.white),
+                    child: Icon(Icons.check, color: Colors.white, size: 28),
                   ),
                 ],
               );
@@ -323,16 +329,19 @@ class _MapFabs extends StatelessWidget {
   const _MapFabs({
     Key key,
     @required this.onToggleMapTypePressed,
+    @required this.onCurrentLocation,
   })  : assert(onToggleMapTypePressed != null),
+        assert(onCurrentLocation != null),
         super(key: key);
 
   final VoidCallback onToggleMapTypePressed;
+  final VoidCallback onCurrentLocation;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.topRight,
-      margin: const EdgeInsets.only(top: 64, right: 8),
+      margin: const EdgeInsets.only(top: 16, right: 8),
       child: Column(
         children: <Widget>[
           FloatingActionButton(
@@ -341,6 +350,13 @@ class _MapFabs extends StatelessWidget {
             mini: true,
             child: const Icon(Icons.layers, size: 28, color: Colors.white),
             heroTag: "layers",
+          ),
+          FloatingActionButton(
+            onPressed: onCurrentLocation,
+            materialTapTargetSize: MaterialTapTargetSize.padded,
+            mini: true,
+            child: const Icon(Icons.my_location, size: 28, color: Colors.white),
+            heroTag: "my_location",
           ),
         ],
       ),

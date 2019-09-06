@@ -110,8 +110,8 @@ class SearchInputState extends State {
         ],
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(4),
+        color: Colors.white
       ),
     );
   }

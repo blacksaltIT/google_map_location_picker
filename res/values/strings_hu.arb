@@ -1,0 +1,10 @@
+{
+  "please_check_your_connection": "Kérlek ellenőrizd a hálózati kapcsolatodat",
+  "server_error": "Szerverhiba",
+  "access_to_location_denied": "Helymeghatározás hozzáférése megtagadva",
+  "allow_access_to_the_location_services": "Kérlek engedélyezd a helymeghatározást",
+  "ok": "Ok",
+  "cant_get_current_location": "Nem működik a helymeghatározás",
+  "please_make_sure_you_enable_gps_and_try_again": "Kérlek győződj meg arról, hogy a helymeghatározás be van kapcsolva, majd próbáld újra",
+  "search_place": "Keressen itt"
+}
