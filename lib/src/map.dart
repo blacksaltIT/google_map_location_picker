@@ -214,7 +214,7 @@ class MapPickerState extends State<MapPicker> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                address ?? 'Unnamed place',
+                                address ?? "",
                                 style: TextStyle(
                                   fontSize: 18,
                                 ),
