@@ -18,10 +18,16 @@ import 'model/nearby_place.dart';
 import 'utils/location_utils.dart';
 
 class AddressPicker extends StatefulWidget {
-  AddressPicker(this.apiKey, {Key key, this.initialCenter});
+  AddressPicker(this.apiKey,
+      {Key key,
+      this.initialCenter,
+      this.finalRefinement = false,
+      this.lifecycleStream = null});
 
   final String apiKey;
   final LatLng initialCenter;
+  final bool finalRefinement;
+  final Stream<AppLifecycleState> lifecycleStream;
 
   @override
   AddressPickerState createState() => AddressPickerState();
@@ -36,17 +42,24 @@ class AddressPickerState extends State<AddressPicker> {
         ],
         child: Builder(builder: (context) {
           return LocationPicker(widget.apiKey,
-              initialCenter: widget.initialCenter);
+              initialCenter: widget.initialCenter,
+              finalRefinement: widget.finalRefinement,
+              lifecycleStream: widget.lifecycleStream);
         }));
   }
 }
 
 class LocationPicker extends StatefulWidget {
-  LocationPicker(this.apiKey, {Key key, this.initialCenter});
+  LocationPicker(this.apiKey,
+      {Key key,
+      this.initialCenter,
+      this.finalRefinement,
+      this.lifecycleStream});
 
   final String apiKey;
-
   final LatLng initialCenter;
+  final bool finalRefinement;
+  final Stream<AppLifecycleState> lifecycleStream;
 
   @override
   LocationPickerState createState() => LocationPickerState();
@@ -407,6 +420,8 @@ class LocationPickerState extends State<LocationPicker> {
           initialCenter: widget.initialCenter,
           key: mapKey,
           apiKey: widget.apiKey,
+          finalRefinement: widget.finalRefinement,
+          lifecycleStream: widget.lifecycleStream,
         ));
   }
 }

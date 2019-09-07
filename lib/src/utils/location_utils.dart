@@ -24,11 +24,11 @@ class LocationUtils {
     locationResult.locality =
         getAddressComponent('locality', result['address_components']);
     locationResult.subLocality =
-        getAddressComponent('sub_locality', result['address_components']);
+        getAddressComponent('sublocality', result['address_components']);
     locationResult.country =
         getAddressComponent('country', result['address_components']);
     locationResult.postalCode =
-        getAddressComponent('postalCode', result['address_components']);
+        getAddressComponent('postal_code', result['address_components']);
     locationResult.latLng = latLng;
   }
 }

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:android_intent/android_intent.dart';
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -20,12 +20,16 @@ import 'utils/location_utils.dart';
 class MapPicker extends StatefulWidget {
   final LatLng initialCenter;
   final String apiKey;
+  final bool finalRefinement;
+  final Stream<AppLifecycleState> lifecycleStream;
 
-  const MapPicker({
-    Key key,
-    this.initialCenter,
-    this.apiKey,
-  }) : super(key: key);
+  const MapPicker(
+      {Key key,
+      this.initialCenter,
+      this.apiKey,
+      this.finalRefinement = false,
+      this.lifecycleStream = null})
+      : super(key: key);
 
   @override
   MapPickerState createState() => MapPickerState();
@@ -33,16 +37,14 @@ class MapPicker extends StatefulWidget {
 
 class MapPickerState extends State<MapPicker> {
   Completer<GoogleMapController> mapController = Completer();
-
+  LatLng _defaultPosition = LatLng(47.497913, 19.040236);
   MapType _currentMapType = MapType.normal;
-
   LatLng _lastMapPosition;
-
-  Position _currentPosition;
-
   String _address;
-
   LocationResult _pinedLocationResult;
+  bool locationEnabled = false;
+  final formKey = new GlobalKey<FormState>();
+  StreamSubscription _appLifecycleListener;
 
   void _onToggleMapTypePressed() {
     final MapType nextType =
@@ -51,47 +53,87 @@ class MapPickerState extends State<MapPicker> {
     setState(() => _currentMapType = nextType);
   }
 
-  void _onCurrentLocation() {
-    _initCurrentLocation();
+  void _onCurrentLocation() async {
+    if (!locationEnabled) {
+      await AppSettings.openAppSettings();
+    } else {
+      await updateToCurrentPosition();
+
+      setState(() {
+        moveToCurrentLocation(_lastMapPosition);
+      });
+    }
+  }
+
+  void handleAppLifecycle() {
+    if (widget.lifecycleStream != null) {
+      _appLifecycleListener = widget.lifecycleStream.listen((state) async {
+        if (state == AppLifecycleState.resumed) {
+          locationEnabled =
+              (await Geolocator().checkGeolocationPermissionStatus() ==
+                  GeolocationStatus.granted);
+
+          if (locationEnabled)
+            _onCurrentLocation();
+          else
+            setState(() {});
+        }
+      });
+    }
   }
 
   // this also checks for location permission.
   Future<void> _initCurrentLocation() async {
+    if (!mounted) return;
+
+    locationEnabled = (await Geolocator().checkGeolocationPermissionStatus() ==
+        GeolocationStatus.granted);
+
+    _lastMapPosition = widget.initialCenter ?? _defaultPosition;
+
+    if (widget.initialCenter == null && locationEnabled)
+      updateToCurrentPosition();
+
+    setState(() {
+      moveToCurrentLocation(_lastMapPosition);
+    });
+  }
+
+  void updateToCurrentPosition() async {
     Position currentPosition;
+
     try {
       currentPosition = await Geolocator()
           .getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
 
       d("position = $currentPosition");
-
-      setState(() => _currentPosition = currentPosition);
+      _lastMapPosition =
+          LatLng(currentPosition.latitude, currentPosition.longitude);
     } on PlatformException catch (e) {
-      currentPosition = null;
       d("_initCurrentLocation#e = $e");
     }
-
-    if (!mounted) return;
-
-    setState(() => _currentPosition = currentPosition);
-
-    if (currentPosition != null)
-      moveToCurrentLocation(
-          LatLng(currentPosition.latitude, currentPosition.longitude));
   }
 
   @override
   void initState() {
     super.initState();
+    handleAppLifecycle();
     _initCurrentLocation();
   }
 
   @override
+  void dispose() {
+    _appLifecycleListener.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    _checkGps();
-    _checkGeolocationPermission();
+    /*_checkGps();
+    _checkGeolocationPermission();*/
     return Scaffold(
       body: Builder(builder: (context) {
-        if (_currentPosition == null)
+        if (_lastMapPosition == null)
           return const Center(child: CircularProgressIndicator());
 
         return buildMap();
@@ -106,13 +148,11 @@ class MapPickerState extends State<MapPicker> {
           GoogleMap(
             onMapCreated: (GoogleMapController controller) {
               mapController.complete(controller);
-
-              _lastMapPosition = widget.initialCenter;
               LocationProvider.of(context)
                   .adjustLastIdleLocation(_lastMapPosition);
             },
             initialCameraPosition: CameraPosition(
-              target: widget.initialCenter,
+              target: _lastMapPosition,
               zoom: 11,
             ),
             onCameraMove: (CameraPosition position) {
@@ -128,14 +168,12 @@ class MapPickerState extends State<MapPicker> {
             onCameraMoveStarted: () {
               print("onCameraMoveStarted#_lastMapPosition = $_lastMapPosition");
             },
-//            onTap: (latLng) {
-//              clearOverlay();
-//            },
             mapType: _currentMapType,
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
           ),
           _MapFabs(
+            locationEnabled: locationEnabled,
             onToggleMapTypePressed: _onToggleMapTypePressed,
             onCurrentLocation: _onCurrentLocation,
           ),
@@ -188,10 +226,71 @@ class MapPickerState extends State<MapPicker> {
                   Spacer(),
                   FloatingActionButton(
                     onPressed: () {
-                      Navigator.of(context).pop(
-                        _pinedLocationResult ??
-                            locationProvider.lastIdleLocation,
-                      );
+                      LocationResult finalResult = _pinedLocationResult ??
+                          locationProvider.lastIdleLocation;
+                      if (widget.finalRefinement) {
+                        TextEditingController routeController =
+                            TextEditingController(text: finalResult.route);
+                        TextEditingController numberController =
+                            TextEditingController(
+                                text: finalResult.streetNumber);
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            // return object of type Dialog
+                            return AlertDialog(
+                              title: Text(S.of(context)?.picked_location),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        "${finalResult.country}\n${finalResult.postalCode} ${finalResult.locality}\n${finalResult.subLocality ?? ""}",
+                                        textAlign: TextAlign.left,
+                                      )),
+                                  TextFormField(
+                                      controller: routeController,
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      textAlign: TextAlign.center,
+                                      maxLines: null),
+                                  TextFormField(
+                                      controller: numberController,
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      textAlign: TextAlign.center,
+                                      maxLines: null),
+                                  SizedBox(height: 10.0),
+                                  Text(
+                                      "${S.of(context)?.gps}: ${finalResult.latLng.latitude.toStringAsFixed(5)}, ${finalResult.latLng.longitude.toStringAsFixed(5)}")
+                                ],
+                              ),
+                              actions: <Widget>[
+                                new FlatButton(
+                                  child: new Text("Close"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                new FlatButton(
+                                  child: new Text("Submit"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    finalResult.route =
+                                        routeController.value.text;
+                                    finalResult.streetNumber =
+                                        numberController.value.text;
+                                    finalResult.address =
+                                        "${finalResult.locality}, ${finalResult.route} ${finalResult.streetNumber}, ${finalResult.postalCode} ${finalResult.country}";
+                                    Navigator.of(context).pop(finalResult);
+                                  },
+                                )
+                              ],
+                            );
+                          },
+                        );
+                      }
                     },
                     child: Icon(Icons.check, color: Colors.white, size: 28),
                   ),
@@ -264,7 +363,7 @@ class MapPickerState extends State<MapPicker> {
   Future moveToCurrentLocation(LatLng currentLocation) async {
     var controller = await mapController.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(target: currentLocation, zoom: 19.151926040649414),
+      CameraPosition(target: currentLocation, zoom: 15),
     ));
   }
 
@@ -327,10 +426,7 @@ class MapPickerState extends State<MapPicker> {
                 FlatButton(
                   child: Text('Ok'),
                   onPressed: () {
-                    final AndroidIntent intent = AndroidIntent(
-                        action: 'android.settings.LOCATION_SOURCE_SETTINGS');
-
-                    intent.launch();
+                    AppSettings.openAppSettings();
                     Navigator.of(context, rootNavigator: true).pop();
                   },
                 ),
@@ -344,16 +440,19 @@ class MapPickerState extends State<MapPicker> {
 }
 
 class _MapFabs extends StatelessWidget {
-  const _MapFabs({
-    Key key,
-    @required this.onToggleMapTypePressed,
-    @required this.onCurrentLocation,
-  })  : assert(onToggleMapTypePressed != null),
+  const _MapFabs(
+      {Key key,
+      @required this.onToggleMapTypePressed,
+      @required this.onCurrentLocation,
+      @required this.locationEnabled})
+      : assert(locationEnabled != null),
+        assert(onToggleMapTypePressed != null),
         assert(onCurrentLocation != null),
         super(key: key);
 
   final VoidCallback onToggleMapTypePressed;
   final VoidCallback onCurrentLocation;
+  final bool locationEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -370,12 +469,17 @@ class _MapFabs extends StatelessWidget {
             heroTag: "layers",
           ),
           FloatingActionButton(
-            onPressed: onCurrentLocation,
-            materialTapTargetSize: MaterialTapTargetSize.padded,
-            mini: true,
-            child: const Icon(Icons.my_location, size: 28, color: Colors.white),
-            heroTag: "my_location",
-          ),
+              onPressed: onCurrentLocation,
+              materialTapTargetSize: MaterialTapTargetSize.padded,
+              mini: true,
+              child: Icon(
+                  locationEnabled == true
+                      ? Icons.my_location
+                      : Icons.location_disabled,
+                  size: 28,
+                  color: Colors.white),
+              heroTag: "my_location",
+              backgroundColor: locationEnabled ? null : Colors.red),
         ],
       ),
     );
