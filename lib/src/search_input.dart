@@ -21,7 +21,7 @@ class SearchInput extends StatefulWidget {
 
 class SearchInputState extends State {
   final ValueChanged<String> onSearchInput;
-
+  final FocusNode focusNode = FocusNode();
   TextEditingController editController = TextEditingController();
 
   Timer debouncer;
@@ -45,6 +45,8 @@ class SearchInputState extends State {
   }
 
   void onSearchInputChange() {
+    if (!focusNode.hasFocus) return;
+
     if (editController.text.isEmpty) {
       debouncer?.cancel();
       onSearchInput(editController.text);
@@ -77,6 +79,7 @@ class SearchInputState extends State {
           ),
           Expanded(
             child: TextField(
+              focusNode: focusNode,
               decoration: InputDecoration(
                 hintText: S.of(context)?.search_place ?? 'Search place',
                 border: InputBorder.none,
