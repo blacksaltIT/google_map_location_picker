@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'model/location_result.dart';
+import 'utils/location_utils.dart';
 
 class MapPicker extends StatefulWidget {
   final LatLng initialCenter;
@@ -40,6 +41,8 @@ class MapPickerState extends State<MapPicker> {
   Position _currentPosition;
 
   String _address;
+
+  LocationResult _pinedLocationResult;
 
   void _onToggleMapTypePressed() {
     final MapType nextType =
@@ -106,7 +109,7 @@ class MapPickerState extends State<MapPicker> {
 
               _lastMapPosition = widget.initialCenter;
               LocationProvider.of(context)
-                  .setLastIdleLocation(_lastMapPosition);
+                  .adjustLastIdleLocation(_lastMapPosition);
             },
             initialCameraPosition: CameraPosition(
               target: widget.initialCenter,
@@ -117,8 +120,10 @@ class MapPickerState extends State<MapPicker> {
             },
             onCameraIdle: () async {
               print("onCameraIdle#_lastMapPosition = $_lastMapPosition");
-              LocationProvider.of(context)
-                  .setLastIdleLocation(_lastMapPosition);
+              setState(() {
+                LocationProvider.of(context)
+                    .adjustLastIdleLocation(_lastMapPosition);
+              });
             },
             onCameraMoveStarted: () {
               print("onCameraMoveStarted#_lastMapPosition = $_lastMapPosition");
@@ -183,12 +188,10 @@ class MapPickerState extends State<MapPicker> {
                   Spacer(),
                   FloatingActionButton(
                     onPressed: () {
-                      Navigator.of(context).pop({
-                        'location': LocationResult(
-                          latLng: locationProvider.lastIdleLocation,
-                          address: _address,
-                        )
-                      });
+                      Navigator.of(context).pop(
+                        _pinedLocationResult ??
+                            locationProvider.lastIdleLocation,
+                      );
                     },
                     child: Icon(Icons.check, color: Colors.white, size: 28),
                   ),
@@ -201,18 +204,33 @@ class MapPickerState extends State<MapPicker> {
     );
   }
 
-  Future<String> getAddress(LatLng location) async {
-    try {
-      var endPoint =
-          'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latitude},${location?.longitude}&key=${widget.apiKey}';
-      var response = jsonDecode((await http.get(endPoint)).body);
+  Future<String> getAddress(LocationResult location) async {
+    if (location != null) {
+      if (!location.isTypedIn) {
+        try {
+          var endPoint =
+              'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
 
-      return response['results'][0]['formatted_address'];
-    } catch (e) {
-      print(e);
-    }
+          var response = await http.get(endPoint);
 
-    return null;
+          if (response.statusCode == 200) {
+            Map<String, dynamic> responseJson = jsonDecode(response.body);
+            _pinedLocationResult = new LocationResult();
+            LocationUtils.updateLocation(
+                responseJson['results'][0], _pinedLocationResult);
+
+            return _pinedLocationResult.address;
+          }
+        } catch (error) {
+          print(error);
+          return null;
+        }
+      } else {
+        _pinedLocationResult = null;
+        return location?.address;
+      }
+    } else
+      return null;
   }
 
   Center pin() {

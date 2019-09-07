@@ -15,13 +15,34 @@ import 'package:provider/provider.dart';
 import 'model/auto_comp_iete_item.dart';
 import 'model/location_result.dart';
 import 'model/nearby_place.dart';
+import 'utils/location_utils.dart';
+
+class AddressPicker extends StatefulWidget {
+  AddressPicker(this.apiKey, {Key key, this.initialCenter});
+
+  final String apiKey;
+  final LatLng initialCenter;
+
+  @override
+  AddressPickerState createState() => AddressPickerState();
+}
+
+class AddressPickerState extends State<AddressPicker> {
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(builder: (_) => LocationProvider()),
+        ],
+        child: Builder(builder: (context) {
+          return LocationPicker(widget.apiKey,
+              initialCenter: widget.initialCenter);
+        }));
+  }
+}
 
 class LocationPicker extends StatefulWidget {
-  LocationPicker(
-    this.apiKey, {
-    Key key,
-    this.initialCenter,
-  });
+  LocationPicker(this.apiKey, {Key key, this.initialCenter});
 
   final String apiKey;
 
@@ -211,12 +232,15 @@ class LocationPickerState extends State<LocationPicker> {
 
     http.get(endpoint).then((response) {
       if (response.statusCode == 200) {
-        Map<String, dynamic> location =
-            jsonDecode(response.body)['result']['geometry']['location'];
+        Map<String, dynamic> responseJson = jsonDecode(response.body);
+        setState(() {
+          locationResult = new LocationResult();
+          LocationUtils.updateLocation(responseJson['result'], locationResult);
+          locationResult.isTypedIn = true;
+          LocationProvider.of(context).setLastIdleLocation(locationResult);
+        });
 
-        LatLng latLng = LatLng(location['lat'], location['lng']);
-
-        moveToLocation(latLng);
+        moveToLocation(locationResult.latLng);
       }
     }).catchError((error) {
       print(error);
@@ -312,16 +336,27 @@ class LocationPickerState extends State<LocationPicker> {
 
     if (response.statusCode == 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
-
-      String road =
-          responseJson['results'][0]['address_components'][0]['short_name'];
-//      String locality =
-//          responseJson['results'][0]['address_components'][1]['short_name'];
-
       setState(() {
-        locationResult = LocationResult();
-        locationResult.address = road;
-        locationResult.latLng = latLng;
+        locationResult = new LocationResult();
+        LocationUtils.updateLocation(
+            responseJson['results'][0], locationResult);
+        LocationProvider.of(context).setLastIdleLocation(locationResult);
+      });
+    }
+  }
+
+  Future reverseGeocodeAddress(String address) async {
+    var response = await http.get(
+        "https://maps.googleapis.com/maps/api/geocode/json?address=${address}"
+        "&key=${widget.apiKey}");
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> responseJson = jsonDecode(response.body);
+      setState(() {
+        locationResult = new LocationResult();
+        LocationUtils.updateLocation(
+            responseJson['results'][0], locationResult);
+        LocationProvider.of(context).setLastIdleLocation(locationResult);
       });
     }
   }
@@ -340,9 +375,8 @@ class LocationPickerState extends State<LocationPicker> {
       );
     });
 
-    reverseGeocodeLatLng(latLng);
-
-    getNearbyPlaces(latLng);
+    //reverseGeocodeLatLng(latLng);
+    //getNearbyPlaces(latLng);
   }
 
   @override
@@ -353,32 +387,26 @@ class LocationPickerState extends State<LocationPicker> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(builder: (_) => LocationProvider()),
-      ],
-      child: Builder(builder: (context) {
-        return Scaffold(
-          appBar: AppBar(
-            leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop()),
-            iconTheme: IconThemeData(color: Colors.black),
-            key: appBarKey,
-            titleSpacing: 0,
-            title: Padding(
-              padding: const EdgeInsets.only(right: 12.0),
-              child: SearchInput(
-                (input) => searchPlace(input),
-                key: searchInputKey,
-              ),
+    return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () => Navigator.of(context).pop()),
+          iconTheme: IconThemeData(color: Colors.black),
+          key: appBarKey,
+          titleSpacing: 0,
+          title: Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: SearchInput(
+              (input) => searchPlace(input),
+              key: searchInputKey,
             ),
           ),
-          body: MapPicker(
-            initialCenter: widget.initialCenter,
-            key: mapKey,
-            apiKey: widget.apiKey,
-          ),
-        );
-      }),
-    );
+        ),
+        body: MapPicker(
+          initialCenter: widget.initialCenter,
+          key: mapKey,
+          apiKey: widget.apiKey,
+        ));
   }
 }

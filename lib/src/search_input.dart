@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_map_location_picker/generated/i18n.dart';
+import 'package:google_map_location_picker/src/providers/location_provider.dart';
+import 'model/location_result.dart';
 
 /// Custom Search input field, showing the search and clear icons.
 class SearchInput extends StatefulWidget {
@@ -101,6 +103,12 @@ class SearchInputState extends State {
                   ),
                   onTap: () {
                     editController.clear();
+                    LocationResult location =
+                        LocationProvider.of(context).lastIdleLocation;
+                    LocationResult clearedLocation = new LocationResult();
+                    clearedLocation.latLng = location.latLng;
+                    LocationProvider.of(context)
+                        .setLastIdleLocation(clearedLocation);
                     setState(() {
                       hasSearchEntry = false;
                     });
@@ -110,9 +118,7 @@ class SearchInputState extends State {
         ],
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4),
-        color: Colors.white
-      ),
+          borderRadius: BorderRadius.circular(4), color: Colors.white),
     );
   }
 }
