@@ -30,12 +30,6 @@ class S implements WidgetsLocalizations {
   String get search_place => "Search place";
   String get server_error => "Server error";
   String get finding_place => "Finding place...";
-  String get country => "Country";
-  String get postal_code => "Postal Code";
-  String get locality => "Locality";
-  String get sublocality => "Sublocality";
-  String get route => "Route";
-  String get number => "Number";
   String get gps => "GPS";
   String get picked_location => "Picked location";
   String get close => "Close";
@@ -66,18 +60,6 @@ class $ar extends S {
   String get please_make_sure_you_enable_gps_and_try_again => "الرجاء التاكد من تفعيل الGPS و المحاولة مرة أخري";
   @override
   String get finding_place => "zagyvaság";
-  @override
-  String get country => "Country";
-  @override
-  String get postal_code => "Postal Code";
-  @override
-  String get locality => "Locality";
-  @override
-  String get sublocality => "Sublocality";
-  @override
-  String get route => "Route";
-  @override
-  String get number => "Number";
   @override
   String get gps => "GPS";
   @override
@@ -113,25 +95,13 @@ class $hu extends S {
   @override
   String get finding_place => "Hely keresése...";
   @override
-  String get country => "Ország";
-  @override
-  String get postal_code => "Irányító szám";
-  @override
-  String get locality => "Település";
-  @override
-  String get sublocality => "Körzet";
-  @override
-  String get route => "Közterület";
-  @override
-  String get number => "Házszám";
-  @override
   String get gps => "GPS";
   @override
   String get picked_location => "Kiválasztott hely";
   @override
-  String get close => "Close";
+  String get close => "Bezár";
   @override
-  String get submit => "Submit";
+  String get submit => "Elfogad";
 }
 
 class $en extends S {

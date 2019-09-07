@@ -269,13 +269,13 @@ class MapPickerState extends State<MapPicker> {
                               ),
                               actions: <Widget>[
                                 new FlatButton(
-                                  child: new Text("Close"),
+                                  child: Text(S.of(context)?.close),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
                                 ),
                                 new FlatButton(
-                                  child: new Text("Submit"),
+                                  child: Text(S.of(context)?.submit),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                     finalResult.route =
