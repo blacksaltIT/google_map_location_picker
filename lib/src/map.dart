@@ -238,7 +238,8 @@ class MapPickerState extends State<MapPicker> {
                           context: context,
                           builder: (BuildContext context) {
                             // return object of type Dialog
-                            return AlertDialog(
+                            return SingleChildScrollView(
+                                child: AlertDialog(
                               title: Text(S.of(context)?.picked_location),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -287,7 +288,7 @@ class MapPickerState extends State<MapPicker> {
                                   },
                                 )
                               ],
-                            );
+                            ));
                           },
                         );
                       }

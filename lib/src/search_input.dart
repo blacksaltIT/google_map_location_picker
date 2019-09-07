@@ -10,11 +10,8 @@ class SearchInput extends StatefulWidget {
   final ValueChanged<String> onSearchInput;
   final Key searchInputKey;
 
-  SearchInput(
-    this.onSearchInput, {
-    Key key,
-    this.searchInputKey,
-  }) : super(key: key);
+  SearchInput(this.onSearchInput, {Key key, this.searchInputKey})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
