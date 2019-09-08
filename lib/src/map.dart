@@ -240,7 +240,7 @@ class MapPickerState extends State<MapPicker> {
                             // return object of type Dialog
                             return SingleChildScrollView(
                                 child: AlertDialog(
-                              title: Text(S.of(context)?.picked_location),
+                              title: Text(S.of(context)?.picked_location ?? 'Picked location'),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: <Widget>[
@@ -264,18 +264,18 @@ class MapPickerState extends State<MapPicker> {
                                       maxLines: null),
                                   SizedBox(height: 10.0),
                                   Text(
-                                      "${S.of(context)?.gps}: ${finalResult.latLng.latitude.toStringAsFixed(5)}, ${finalResult.latLng.longitude.toStringAsFixed(5)}")
+                                      "${S.of(context)?.gps??'GPS'}: ${finalResult.latLng.latitude.toStringAsFixed(5)}, ${finalResult.latLng.longitude.toStringAsFixed(5)}")
                                 ],
                               ),
                               actions: <Widget>[
                                 new FlatButton(
-                                  child: Text(S.of(context)?.close),
+                                  child: Text(S.of(context)?.close ?? 'Close'),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
                                 ),
                                 new FlatButton(
-                                  child: Text(S.of(context)?.submit),
+                                  child: Text(S.of(context)?.submit ?? 'Submit'),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                     finalResult.route =
