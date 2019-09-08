@@ -37,7 +37,7 @@ class MapPicker extends StatefulWidget {
 
 class MapPickerState extends State<MapPicker> {
   Completer<GoogleMapController> mapController = Completer();
-  LatLng _defaultPosition = LatLng(47.497913, 19.040236);
+  static LatLng _defaultPosition = const LatLng(45.521563, -122.677433);
   MapType _currentMapType = MapType.normal;
   LatLng _lastMapPosition;
   String _address;
