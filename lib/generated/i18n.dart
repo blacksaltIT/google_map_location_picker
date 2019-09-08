@@ -34,6 +34,8 @@ class S implements WidgetsLocalizations {
   String get picked_location => "Picked location";
   String get close => "Close";
   String get submit => "Submit";
+  String get route => "Public place";
+  String get number => "Street, door number etc.";
 }
 
 class $ar extends S {
@@ -68,6 +70,10 @@ class $ar extends S {
   String get close => "Close";
   @override
   String get submit => "Submit";
+  @override
+  String get route => "Public place";
+  @override
+  String get number => "Street, door number etc.";
 }
 
 class $hu extends S {
@@ -102,6 +108,10 @@ class $hu extends S {
   String get close => "Bezár";
   @override
   String get submit => "Elfogad";
+  @override
+  String get route => "Közterület neve";
+  @override
+  String get number => "Házszám, ajtó stb.";
 }
 
 class $en extends S {

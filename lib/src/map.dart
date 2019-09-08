@@ -240,7 +240,8 @@ class MapPickerState extends State<MapPicker> {
                             // return object of type Dialog
                             return SingleChildScrollView(
                                 child: AlertDialog(
-                              title: Text(S.of(context)?.picked_location ?? 'Picked location'),
+                              title: Text(S.of(context)?.picked_location ??
+                                  'Picked location'),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: <Widget>[
@@ -252,19 +253,27 @@ class MapPickerState extends State<MapPicker> {
                                       )),
                                   TextFormField(
                                       controller: routeController,
+                                      decoration: new InputDecoration(
+                                          hintText: S.of(context)?.route ??
+                                              'Public place',
+                                          border: null),
                                       textCapitalization:
                                           TextCapitalization.sentences,
                                       textAlign: TextAlign.center,
                                       maxLines: null),
                                   TextFormField(
                                       controller: numberController,
+                                      decoration: new InputDecoration(
+                                          hintText: S.of(context)?.number ??
+                                              'Street, door number etc.',
+                                          border: null),
                                       textCapitalization:
                                           TextCapitalization.sentences,
                                       textAlign: TextAlign.center,
                                       maxLines: null),
                                   SizedBox(height: 10.0),
                                   Text(
-                                      "${S.of(context)?.gps??'GPS'}: ${finalResult.latLng.latitude.toStringAsFixed(5)}, ${finalResult.latLng.longitude.toStringAsFixed(5)}")
+                                      "${S.of(context)?.gps ?? 'GPS'}: ${finalResult.latLng.latitude.toStringAsFixed(5)}, ${finalResult.latLng.longitude.toStringAsFixed(5)}")
                                 ],
                               ),
                               actions: <Widget>[
@@ -275,7 +284,8 @@ class MapPickerState extends State<MapPicker> {
                                   },
                                 ),
                                 new FlatButton(
-                                  child: Text(S.of(context)?.submit ?? 'Submit'),
+                                  child:
+                                      Text(S.of(context)?.submit ?? 'Submit'),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                     finalResult.route =
