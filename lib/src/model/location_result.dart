@@ -13,6 +13,7 @@ class LocationResult {
   String streetNumber;
   String postalCode;
   bool isTypedIn;
+  double radius;
 
   /// Latitude/Longitude of the selected location.
   LatLng latLng;
@@ -26,7 +27,8 @@ class LocationResult {
       this.route,
       this.subLocality,
       this.locality,
-      this.postalCode});
+      this.postalCode,
+      this.radius});
 
   @override
   String toString() {

@@ -21,13 +21,17 @@ class AddressPicker extends StatefulWidget {
   AddressPicker(this.apiKey,
       {Key key,
       this.initialCenter,
+      this.initialRadius,
       this.finalRefinement = false,
-      this.lifecycleStream = null});
+      this.lifecycleStream = null,
+      this.defaultZoom = 15});
 
   final String apiKey;
   final LatLng initialCenter;
+  final double initialRadius;
   final bool finalRefinement;
   final Stream<AppLifecycleState> lifecycleStream;
+  final double defaultZoom;
 
   @override
   AddressPickerState createState() => AddressPickerState();
@@ -43,7 +47,9 @@ class AddressPickerState extends State<AddressPicker> {
         child: Builder(builder: (context) {
           return LocationPicker(widget.apiKey,
               initialCenter: widget.initialCenter,
+              initialRadius: widget.initialRadius,
               finalRefinement: widget.finalRefinement,
+              defaultZoom: widget.defaultZoom,
               lifecycleStream: widget.lifecycleStream);
         }));
   }
@@ -53,13 +59,17 @@ class LocationPicker extends StatefulWidget {
   LocationPicker(this.apiKey,
       {Key key,
       this.initialCenter,
+      this.initialRadius,
       this.finalRefinement,
-      this.lifecycleStream});
+      this.lifecycleStream,
+      this.defaultZoom = 15});
 
   final String apiKey;
   final LatLng initialCenter;
+  final double initialRadius;
   final bool finalRefinement;
   final Stream<AppLifecycleState> lifecycleStream;
+  final double defaultZoom;
 
   @override
   LocationPickerState createState() => LocationPickerState();
@@ -382,7 +392,7 @@ class LocationPickerState extends State<LocationPicker> {
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: latLng,
-            zoom: 15,
+            zoom: widget.defaultZoom,
           ),
         ),
       );
@@ -418,8 +428,10 @@ class LocationPickerState extends State<LocationPicker> {
         ),
         body: MapPicker(
           initialCenter: widget.initialCenter,
+          initialRadius: widget.initialRadius,
           key: mapKey,
           apiKey: widget.apiKey,
+          defaultZoom: widget.defaultZoom,
           finalRefinement: widget.finalRefinement,
           lifecycleStream: widget.lifecycleStream,
         ));

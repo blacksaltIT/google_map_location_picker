@@ -19,16 +19,20 @@ import 'utils/location_utils.dart';
 
 class MapPicker extends StatefulWidget {
   final LatLng initialCenter;
+  final double initialRadius;
   final String apiKey;
   final bool finalRefinement;
   final Stream<AppLifecycleState> lifecycleStream;
+  final double defaultZoom;
 
   const MapPicker(
       {Key key,
       this.initialCenter,
+      this.initialRadius,
       this.apiKey,
       this.finalRefinement = false,
-      this.lifecycleStream = null})
+      this.lifecycleStream = null,
+      this.defaultZoom = 15})
       : super(key: key);
 
   @override
@@ -45,6 +49,7 @@ class MapPickerState extends State<MapPicker> {
   bool locationEnabled = false;
   final formKey = new GlobalKey<FormState>();
   StreamSubscription _appLifecycleListener;
+  double _radius = 5.0;
 
   void _onToggleMapTypePressed() {
     final MapType nextType =
@@ -90,6 +95,7 @@ class MapPickerState extends State<MapPicker> {
         GeolocationStatus.granted);
 
     _lastMapPosition = widget.initialCenter ?? _defaultPosition;
+    _radius = widget.initialRadius ?? 5;
 
     if (widget.initialCenter == null && locationEnabled)
       updateToCurrentPosition();
@@ -153,7 +159,7 @@ class MapPickerState extends State<MapPicker> {
             },
             initialCameraPosition: CameraPosition(
               target: _lastMapPosition,
-              zoom: 11,
+              zoom: widget.defaultZoom,
             ),
             onCameraMove: (CameraPosition position) {
               _lastMapPosition = position.target;
@@ -171,6 +177,15 @@ class MapPickerState extends State<MapPicker> {
             mapType: _currentMapType,
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
+            circles: Set.from([
+              Circle(
+                circleId: CircleId("gerikor"),
+                center: _lastMapPosition,
+                fillColor: Colors.red.withAlpha(60),
+                strokeColor: Colors.redAccent,
+                radius: _radius,
+              )
+            ]),
           ),
           _MapFabs(
             locationEnabled: locationEnabled,
@@ -178,10 +193,19 @@ class MapPickerState extends State<MapPicker> {
             onCurrentLocation: _onCurrentLocation,
           ),
           pin(),
+          slider(),
           locationCard(),
         ],
       ),
     );
+  }
+
+  Widget slider() {
+    return Container(height:20, child: Slider(max: 100, min: 1, value: _radius, onChanged: (value) {
+          setState((){
+            _radius = value;
+          });
+        }));
   }
 
   Widget locationCard() {
@@ -228,6 +252,7 @@ class MapPickerState extends State<MapPicker> {
                     onPressed: () {
                       LocationResult finalResult = _pinedLocationResult ??
                           locationProvider.lastIdleLocation;
+                      finalResult.radius = _radius;
                       if (widget.finalRefinement) {
                         TextEditingController routeController =
                             TextEditingController(text: finalResult.route);
@@ -328,7 +353,6 @@ class MapPickerState extends State<MapPicker> {
             _pinedLocationResult = new LocationResult();
             LocationUtils.updateLocation(
                 responseJson['results'][0], _pinedLocationResult);
-
             return _pinedLocationResult.address;
           }
         } catch (error) {
@@ -374,7 +398,7 @@ class MapPickerState extends State<MapPicker> {
   Future moveToCurrentLocation(LatLng currentLocation) async {
     var controller = await mapController.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(target: currentLocation, zoom: 15),
+      CameraPosition(target: currentLocation, zoom: widget.defaultZoom),
     ));
   }
 
