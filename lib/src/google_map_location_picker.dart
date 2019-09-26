@@ -17,27 +17,38 @@ import 'model/location_result.dart';
 import 'model/nearby_place.dart';
 import 'utils/location_utils.dart';
 
-class AddressPicker extends StatefulWidget {
-  AddressPicker(this.apiKey,
+class LocationPicker extends InheritedWidget {
+  LocationPicker(this.apiKey,
       {Key key,
       this.initialCenter,
       this.initialRadius,
       this.finalRefinement = false,
+      this.withRadius = false,
       this.lifecycleStream = null,
-      this.defaultZoom = 15});
+      this.defaultZoom = 15}): super(key:key, child: LocationPickerWrapper());
 
   final String apiKey;
   final LatLng initialCenter;
   final double initialRadius;
   final bool finalRefinement;
+  final bool withRadius;
   final Stream<AppLifecycleState> lifecycleStream;
   final double defaultZoom;
 
   @override
-  AddressPickerState createState() => AddressPickerState();
+  bool updateShouldNotify(LocationPicker oldWidget) => false;
+
+  static LocationPicker of(BuildContext context) {
+      return context.inheritFromWidgetOfExactType(LocationPicker);
+   }
 }
 
-class AddressPickerState extends State<AddressPicker> {
+class LocationPickerWrapper extends StatefulWidget {
+  @override
+  LocationPickerWrapperState createState() => LocationPickerWrapperState();
+}
+
+class LocationPickerWrapperState extends State<LocationPickerWrapper> {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -45,67 +56,17 @@ class AddressPickerState extends State<AddressPicker> {
           ChangeNotifierProvider(builder: (_) => LocationProvider()),
         ],
         child: Builder(builder: (context) {
-          return LocationPicker(widget.apiKey,
-              initialCenter: widget.initialCenter,
-              initialRadius: widget.initialRadius,
-              finalRefinement: widget.finalRefinement,
-              defaultZoom: widget.defaultZoom,
-              lifecycleStream: widget.lifecycleStream);
+          return LocationPickerEncapsulated();
         }));
   }
 }
 
-class LocationPicker extends StatefulWidget {
-  LocationPicker(this.apiKey,
-      {Key key,
-      this.initialCenter,
-      this.initialRadius,
-      this.finalRefinement,
-      this.lifecycleStream,
-      this.defaultZoom = 15});
-
-  final String apiKey;
-  final LatLng initialCenter;
-  final double initialRadius;
-  final bool finalRefinement;
-  final Stream<AppLifecycleState> lifecycleStream;
-  final double defaultZoom;
-
+class LocationPickerEncapsulated extends StatefulWidget {
   @override
-  LocationPickerState createState() => LocationPickerState();
-
-  /// Returns a [LatLng] object of the location that was picked.
-  ///
-  /// The [apiKey] argument API key generated from Google Cloud Console.
-  /// You can get an API key [here](https://cloud.google.com/maps-platform/)
-  ///
-  /// [initialCenter] The geographical location that the camera is pointing at.
-  ///
-  static Future<LocationResult> pickLocation(
-    BuildContext context,
-    String apiKey, {
-    LatLng initialCenter = const LatLng(45.521563, -122.677433),
-  }) async {
-    var results = await Navigator.of(context).push(
-      MaterialPageRoute<dynamic>(
-        builder: (BuildContext context) {
-          return LocationPicker(
-            apiKey,
-            initialCenter: initialCenter,
-          );
-        },
-      ),
-    );
-
-    if (results != null && results.containsKey('location')) {
-      return results['location'];
-    } else {
-      return null;
-    }
-  }
+  LocationPickerEncapsulatedState createState() => LocationPickerEncapsulatedState();
 }
 
-class LocationPickerState extends State<LocationPicker> {
+class LocationPickerEncapsulatedState extends State<LocationPickerEncapsulated> {
   /// Result returned after user completes selection
   LocationResult locationResult;
 
@@ -200,7 +161,7 @@ class LocationPickerState extends State<LocationPicker> {
     place = place.replaceAll(" ", "+");
     var endpoint =
         "https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
-            "key=${widget.apiKey}&" +
+            "key=${LocationPicker.of(context).apiKey}&" +
             "input={$place}&sessiontoken=$sessionToken";
 
     if (locationResult != null) {
@@ -250,7 +211,7 @@ class LocationPickerState extends State<LocationPicker> {
     clearOverlay();
 
     String endpoint =
-        "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
+        "https://maps.googleapis.com/maps/api/place/details/json?key=${LocationPicker.of(context).apiKey}" +
             "&placeid=$placeId";
 
     http.get(endpoint).then((response) {
@@ -320,7 +281,7 @@ class LocationPickerState extends State<LocationPicker> {
   void getNearbyPlaces(LatLng latLng) {
     http
         .get("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
-            "key=${widget.apiKey}&" +
+            "key=${LocationPicker.of(context).apiKey}&" +
             "location=${latLng.latitude},${latLng.longitude}&radius=150")
         .then((response) {
       if (response.statusCode == 200) {
@@ -355,7 +316,7 @@ class LocationPickerState extends State<LocationPicker> {
   Future reverseGeocodeLatLng(LatLng latLng) async {
     var response = await http.get(
         "https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}"
-        "&key=${widget.apiKey}");
+        "&key=${LocationPicker.of(context).apiKey}");
 
     if (response.statusCode == 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
@@ -371,7 +332,7 @@ class LocationPickerState extends State<LocationPicker> {
   Future reverseGeocodeAddress(String address) async {
     var response = await http.get(
         "https://maps.googleapis.com/maps/api/geocode/json?address=${address}"
-        "&key=${widget.apiKey}");
+        "&key=${LocationPicker.of(context).apiKey}");
 
     if (response.statusCode == 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
@@ -392,7 +353,7 @@ class LocationPickerState extends State<LocationPicker> {
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: latLng,
-            zoom: widget.defaultZoom,
+            zoom: LocationPicker.of(context).defaultZoom,
           ),
         ),
       );
@@ -427,13 +388,7 @@ class LocationPickerState extends State<LocationPicker> {
           ),
         ),
         body: MapPicker(
-          initialCenter: widget.initialCenter,
-          initialRadius: widget.initialRadius,
-          key: mapKey,
-          apiKey: widget.apiKey,
-          defaultZoom: widget.defaultZoom,
-          finalRefinement: widget.finalRefinement,
-          lifecycleStream: widget.lifecycleStream,
+          key: mapKey
         ));
   }
 }

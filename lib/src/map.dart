@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_map_location_picker/google_map_location_picker.dart';
 import 'package:google_map_location_picker/generated/i18n.dart';
 import 'package:google_map_location_picker/src/providers/location_provider.dart';
 import 'package:google_map_location_picker/src/utils/loading_builder.dart';
@@ -18,21 +19,8 @@ import 'model/location_result.dart';
 import 'utils/location_utils.dart';
 
 class MapPicker extends StatefulWidget {
-  final LatLng initialCenter;
-  final double initialRadius;
-  final String apiKey;
-  final bool finalRefinement;
-  final Stream<AppLifecycleState> lifecycleStream;
-  final double defaultZoom;
-
   const MapPicker(
-      {Key key,
-      this.initialCenter,
-      this.initialRadius,
-      this.apiKey,
-      this.finalRefinement = false,
-      this.lifecycleStream = null,
-      this.defaultZoom = 15})
+      {Key key})
       : super(key: key);
 
   @override
@@ -71,8 +59,8 @@ class MapPickerState extends State<MapPicker> {
   }
 
   void handleAppLifecycle() {
-    if (widget.lifecycleStream != null) {
-      _appLifecycleListener = widget.lifecycleStream.listen((state) async {
+    if (LocationPicker.of(context).lifecycleStream != null) {
+      _appLifecycleListener = LocationPicker.of(context).lifecycleStream.listen((state) async {
         if (state == AppLifecycleState.resumed) {
           locationEnabled =
               (await Geolocator().checkGeolocationPermissionStatus() ==
@@ -94,10 +82,10 @@ class MapPickerState extends State<MapPicker> {
     locationEnabled = (await Geolocator().checkGeolocationPermissionStatus() ==
         GeolocationStatus.granted);
 
-    _lastMapPosition = widget.initialCenter ?? _defaultPosition;
-    _radius = widget.initialRadius ?? 5;
+    _lastMapPosition = LocationPicker.of(context).initialCenter ?? _defaultPosition;
+    _radius = LocationPicker.of(context).initialRadius ?? 5;
 
-    if (widget.initialCenter == null && locationEnabled)
+    if (LocationPicker.of(context).initialCenter == null && locationEnabled)
       updateToCurrentPosition();
 
     setState(() {
@@ -123,8 +111,12 @@ class MapPickerState extends State<MapPicker> {
   @override
   void initState() {
     super.initState();
-    handleAppLifecycle();
     _initCurrentLocation();
+  }
+
+  @override
+  void didChangeDependencies() {
+    handleAppLifecycle();
   }
 
   @override
@@ -159,7 +151,7 @@ class MapPickerState extends State<MapPicker> {
             },
             initialCameraPosition: CameraPosition(
               target: _lastMapPosition,
-              zoom: widget.defaultZoom,
+              zoom: LocationPicker.of(context).defaultZoom,
             ),
             onCameraMove: (CameraPosition position) {
               _lastMapPosition = position.target;
@@ -177,15 +169,15 @@ class MapPickerState extends State<MapPicker> {
             mapType: _currentMapType,
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
-            circles: Set.from([
+            circles: LocationPicker.of(context).withRadius ? Set.from([
               Circle(
-                circleId: CircleId("gerikor"),
+                circleId: CircleId("area"),
                 center: _lastMapPosition,
                 fillColor: Colors.red.withAlpha(60),
                 strokeColor: Colors.redAccent,
                 radius: _radius,
               )
-            ]),
+            ]): null,
           ),
           _MapFabs(
             locationEnabled: locationEnabled,
@@ -193,7 +185,7 @@ class MapPickerState extends State<MapPicker> {
             onCurrentLocation: _onCurrentLocation,
           ),
           pin(),
-          slider(),
+          if (LocationPicker.of(context).withRadius) slider(),
           locationCard(),
         ],
       ),
@@ -252,8 +244,9 @@ class MapPickerState extends State<MapPicker> {
                     onPressed: () {
                       LocationResult finalResult = _pinedLocationResult ??
                           locationProvider.lastIdleLocation;
-                      finalResult.radius = _radius;
-                      if (widget.finalRefinement) {
+                      if (LocationPicker.of(context).withRadius)
+                        finalResult.radius = _radius;
+                      if (LocationPicker.of(context).finalRefinement) {
                         TextEditingController routeController =
                             TextEditingController(text: finalResult.route);
                         TextEditingController numberController =
@@ -344,7 +337,7 @@ class MapPickerState extends State<MapPicker> {
       if (!location.isTypedIn) {
         try {
           var endPoint =
-              'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
+              'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${LocationPicker.of(context).apiKey}';
 
           var response = await http.get(endPoint);
 
@@ -353,6 +346,7 @@ class MapPickerState extends State<MapPicker> {
             _pinedLocationResult = new LocationResult();
             LocationUtils.updateLocation(
                 responseJson['results'][0], _pinedLocationResult);
+            _pinedLocationResult.latLng = location.latLng;    
             return _pinedLocationResult.address;
           }
         } catch (error) {
@@ -398,7 +392,7 @@ class MapPickerState extends State<MapPicker> {
   Future moveToCurrentLocation(LatLng currentLocation) async {
     var controller = await mapController.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(target: currentLocation, zoom: widget.defaultZoom),
+      CameraPosition(target: currentLocation, zoom: LocationPicker.of(context).defaultZoom),
     ));
   }
 
