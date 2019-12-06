@@ -72,7 +72,7 @@ class SearchInputState extends State {
         children: <Widget>[
           Icon(
             Icons.search,
-            color: Colors.black,
+            color: Theme.of(context).accentColor,
           ),
           SizedBox(
             width: 8,

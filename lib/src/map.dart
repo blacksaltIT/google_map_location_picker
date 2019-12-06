@@ -73,9 +73,10 @@ class MapPickerState extends State<MapPicker> {
     if (widget.lifecycleStream != null) {
       _appLifecycleListener = widget.lifecycleStream.listen((state) async {
         if (state == AppLifecycleState.resumed) {
-          locationEnabled = !kIsWeb ?
-              (await Geolocator().checkGeolocationPermissionStatus() ==
-                  GeolocationStatus.granted): false;
+          locationEnabled = !kIsWeb
+              ? (await Geolocator().checkGeolocationPermissionStatus() ==
+                  GeolocationStatus.granted)
+              : false;
 
           if (locationEnabled)
             _onCurrentLocation();
@@ -90,8 +91,10 @@ class MapPickerState extends State<MapPicker> {
   Future<void> _initCurrentLocation() async {
     if (!mounted) return;
 
-    locationEnabled = !kIsWeb ? (await Geolocator().checkGeolocationPermissionStatus() ==
-        GeolocationStatus.granted):false;
+    locationEnabled = !kIsWeb
+        ? (await Geolocator().checkGeolocationPermissionStatus() ==
+            GeolocationStatus.granted)
+        : false;
 
     _lastMapPosition = widget.initialCenter ?? _defaultPosition;
 
@@ -127,8 +130,7 @@ class MapPickerState extends State<MapPicker> {
 
   @override
   void dispose() {
-    if (_appLifecycleListener != null)
-    _appLifecycleListener.cancel();
+    if (_appLifecycleListener != null) _appLifecycleListener.cancel();
     super.dispose();
   }
 
@@ -146,10 +148,33 @@ class MapPickerState extends State<MapPicker> {
     );
   }
 
+  googleDart.MapTypeId convertMapType(MapType type) {
+    switch (type) {
+      
+      case MapType.none:
+        return googleDart.MapTypeId.ROADMAP;
+        break;
+      case MapType.normal:
+       return googleDart.MapTypeId.ROADMAP;
+        break;
+      case MapType.satellite:
+        return googleDart.MapTypeId.SATELLITE;
+        break;
+      case MapType.terrain:
+        return googleDart.MapTypeId.TERRAIN;
+        break;
+      case MapType.hybrid:
+        return googleDart.MapTypeId.HYBRID;
+        break;
+    }
+  }
+
   Widget buildMap() {
     final mapOptions = new googleDart.MapOptions()
-      ..zoom = 8
-      ..center = new googleDart.LatLng(-34.397, 150.644);
+      ..zoom = 15
+      ..center = new googleDart.LatLng(
+          _lastMapPosition.latitude, _lastMapPosition.longitude)
+      ..mapTypeControl = true;
 
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory("map-content", (int viewId) {
@@ -158,41 +183,52 @@ class MapPickerState extends State<MapPicker> {
         ..style.width = '100%'
         ..style.height = '100%'
         ..style.border = 'none';
-      googleDart.GMap mapComponent = new googleDart.GMap(elem, mapOptions);
+      googleDart.GMap map = new googleDart.GMap(elem, mapOptions);
+      
+      map.onTilesloaded.listen((onData) {
+        LocationProvider.of(context).adjustLastIdleLocation(_lastMapPosition);
+      });
+      map.onCenterChanged.listen((onData) {
+        _lastMapPosition = LatLng(map.center.lat, map.center.lng);
+      });
+
+      map.onIdle.listen((onData) {
+        setState(() {
+          LocationProvider.of(context).adjustLastIdleLocation(_lastMapPosition);
+        });
+      });
 
       return elem;
     });
     return Center(
       child: Stack(
         children: <Widget>[
-          kIsWeb ? HtmlElementView(viewType: "map-content") : GoogleMap(
-            onMapCreated: (GoogleMapController controller) {
-              mapController.complete(controller);
-              LocationProvider.of(context)
-                  .adjustLastIdleLocation(_lastMapPosition);
-            },
-            initialCameraPosition: CameraPosition(
-              target: _lastMapPosition,
-              zoom: 11,
-            ),
-            onCameraMove: (CameraPosition position) {
-              _lastMapPosition = position.target;
-            },
-            onCameraIdle: () async {
-              print("onCameraIdle#_lastMapPosition = $_lastMapPosition");
-              setState(() {
-                LocationProvider.of(context)
-                    .adjustLastIdleLocation(_lastMapPosition);
-              });
-            },
-            onCameraMoveStarted: () {
-              print("onCameraMoveStarted#_lastMapPosition = $_lastMapPosition");
-            },
-            mapType: _currentMapType,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-          ),
-          _MapFabs(
+          kIsWeb
+              ? HtmlElementView(viewType: "map-content")
+              : GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController.complete(controller);
+                    LocationProvider.of(context)
+                        .adjustLastIdleLocation(_lastMapPosition);
+                  },
+                  initialCameraPosition: CameraPosition(
+                    target: _lastMapPosition,
+                    zoom: 11,
+                  ),
+                  onCameraMove: (CameraPosition position) {
+                    _lastMapPosition = position.target;
+                  },
+                  onCameraIdle: () async {
+                    setState(() {
+                      LocationProvider.of(context)
+                          .adjustLastIdleLocation(_lastMapPosition);
+                    });
+                  },
+                  mapType: _currentMapType,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                ),
+          if (!kIsWeb) _MapFabs(
             locationEnabled: locationEnabled,
             onToggleMapTypePressed: _onToggleMapTypePressed,
             onCurrentLocation: _onCurrentLocation,
@@ -488,7 +524,7 @@ class _MapFabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      alignment: Alignment.topRight,
+      alignment: Alignment.centerRight,
       margin: const EdgeInsets.only(top: 16, right: 8),
       child: Column(
         children: <Widget>[
