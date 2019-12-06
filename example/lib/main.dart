@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_map_location_picker/generated/i18n.dart'
     as location_picker;
 import 'package:google_map_location_picker/google_map_location_picker.dart';
-import 'package:google_map_location_picker_example/keys.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 
 import 'generated/i18n.dart';
 
@@ -38,23 +38,11 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Builder(builder: (context) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                RaisedButton(
-                  onPressed: () async {
-                    LocationResult result = await LocationPicker.pickLocation(
-                      context,
-                      apiKey,
-                    );
-                    print("result = $result");
-                    setState(() => _pickedLocation = result);
-                  },
-                  child: Text('Pick location'),
-                ),
-                Text(_pickedLocation.toString()),
-              ],
-            ),
+            child: AddressPicker(
+                  "AIzaSyA_KAgHXMvHQ50a7-xVv3pujgIM8x1fHYE",
+                  finalRefinement: true,
+                  initialCenter
+                          : gm.LatLng(47.497913, 19.040236))
           );
         }),
       ),

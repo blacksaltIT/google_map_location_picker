@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
+import 'dart:ui' as ui;
 
 import 'package:app_settings/app_settings.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +14,7 @@ import 'package:google_map_location_picker/src/providers/location_provider.dart'
 import 'package:google_map_location_picker/src/utils/loading_builder.dart';
 import 'package:google_map_location_picker/src/utils/log.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps/google_maps.dart' as googleDart;
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
@@ -69,9 +73,9 @@ class MapPickerState extends State<MapPicker> {
     if (widget.lifecycleStream != null) {
       _appLifecycleListener = widget.lifecycleStream.listen((state) async {
         if (state == AppLifecycleState.resumed) {
-          locationEnabled =
+          locationEnabled = !kIsWeb ?
               (await Geolocator().checkGeolocationPermissionStatus() ==
-                  GeolocationStatus.granted);
+                  GeolocationStatus.granted): false;
 
           if (locationEnabled)
             _onCurrentLocation();
@@ -86,8 +90,8 @@ class MapPickerState extends State<MapPicker> {
   Future<void> _initCurrentLocation() async {
     if (!mounted) return;
 
-    locationEnabled = (await Geolocator().checkGeolocationPermissionStatus() ==
-        GeolocationStatus.granted);
+    locationEnabled = !kIsWeb ? (await Geolocator().checkGeolocationPermissionStatus() ==
+        GeolocationStatus.granted):false;
 
     _lastMapPosition = widget.initialCenter ?? _defaultPosition;
 
@@ -142,10 +146,25 @@ class MapPickerState extends State<MapPicker> {
   }
 
   Widget buildMap() {
+    final mapOptions = new googleDart.MapOptions()
+      ..zoom = 8
+      ..center = new googleDart.LatLng(-34.397, 150.644);
+
+    // ignore: undefined_prefixed_name
+    ui.platformViewRegistry.registerViewFactory("map-content", (int viewId) {
+      final elem = DivElement()
+        ..id = "map-content"
+        ..style.width = '100%'
+        ..style.height = '100%'
+        ..style.border = 'none';
+      googleDart.GMap mapComponent = new googleDart.GMap(elem, mapOptions);
+
+      return elem;
+    });
     return Center(
       child: Stack(
         children: <Widget>[
-          GoogleMap(
+          kIsWeb ? HtmlElementView(viewType: "map-content") : GoogleMap(
             onMapCreated: (GoogleMapController controller) {
               mapController.complete(controller);
               LocationProvider.of(context)
@@ -461,8 +480,8 @@ class _MapFabs extends StatelessWidget {
         assert(onCurrentLocation != null),
         super(key: key);
 
-  final VoidCallback onToggleMapTypePressed;
-  final VoidCallback onCurrentLocation;
+  final ui.VoidCallback onToggleMapTypePressed;
+  final ui.VoidCallback onCurrentLocation;
   final bool locationEnabled;
 
   @override
