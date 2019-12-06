@@ -127,6 +127,7 @@ class MapPickerState extends State<MapPicker> {
 
   @override
   void dispose() {
+    if (_appLifecycleListener != null)
     _appLifecycleListener.cancel();
     super.dispose();
   }
@@ -338,7 +339,7 @@ class MapPickerState extends State<MapPicker> {
       if (!location.isTypedIn) {
         try {
           var endPoint =
-              'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
+              'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
 
           var response = await http.get(endPoint);
 
