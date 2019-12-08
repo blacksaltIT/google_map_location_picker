@@ -50,6 +50,10 @@ class MapPickerState extends State<MapPicker> {
   final formKey = new GlobalKey<FormState>();
   StreamSubscription _appLifecycleListener;
   Completer<googleDart.GMap> map = Completer();
+  StreamSubscription onTilesloaded;
+  StreamSubscription onCenterChanged;
+  StreamSubscription onIdle;
+
 
   void _onToggleMapTypePressed() {
     final MapType nextType =
@@ -134,6 +138,10 @@ class MapPickerState extends State<MapPicker> {
   @override
   void dispose() {
     if (_appLifecycleListener != null) _appLifecycleListener.cancel();
+    if (onTilesloaded != null) onTilesloaded.cancel();
+    if (onCenterChanged != null) onTilesloaded.cancel();
+    if (onIdle != null) onTilesloaded.cancel();
+
     super.dispose();
   }
 
@@ -153,16 +161,16 @@ class MapPickerState extends State<MapPicker> {
           ..style.border = 'none';
         googleDart.GMap googleMap = new googleDart.GMap(elem, mapOptions);
 
-        googleMap.onTilesloaded.listen((onData) {
+        onTilesloaded= googleMap.onTilesloaded.listen((onData) {
           if (!map.isCompleted)
             map.complete(googleMap);
           LocationProvider.of(context).adjustLastIdleLocation(_lastMapPosition);
         });
-        googleMap.onCenterChanged.listen((onData) {
+        onCenterChanged = googleMap.onCenterChanged.listen((onData) {
           _lastMapPosition = LatLng(googleMap.center.lat, googleMap.center.lng);
         });
 
-        googleMap.onIdle.listen((onData) {
+        onIdle= googleMap.onIdle.listen((onData) {
           if (mounted)
           setState(() {
             LocationProvider.of(context)
