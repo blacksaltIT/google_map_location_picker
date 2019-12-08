@@ -163,6 +163,7 @@ class MapPickerState extends State<MapPicker> {
         });
 
         googleMap.onIdle.listen((onData) {
+          if (mounted)
           setState(() {
             LocationProvider.of(context)
                 .adjustLastIdleLocation(_lastMapPosition);
