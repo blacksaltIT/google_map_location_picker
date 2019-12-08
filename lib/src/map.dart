@@ -49,6 +49,7 @@ class MapPickerState extends State<MapPicker> {
   bool locationEnabled = false;
   final formKey = new GlobalKey<FormState>();
   StreamSubscription _appLifecycleListener;
+  googleDart.GMap map;
 
   void _onToggleMapTypePressed() {
     final MapType nextType =
@@ -150,12 +151,11 @@ class MapPickerState extends State<MapPicker> {
 
   googleDart.MapTypeId convertMapType(MapType type) {
     switch (type) {
-      
       case MapType.none:
         return googleDart.MapTypeId.ROADMAP;
         break;
       case MapType.normal:
-       return googleDart.MapTypeId.ROADMAP;
+        return googleDart.MapTypeId.ROADMAP;
         break;
       case MapType.satellite:
         return googleDart.MapTypeId.SATELLITE;
@@ -170,36 +170,39 @@ class MapPickerState extends State<MapPicker> {
   }
 
   Widget buildMap() {
-    final mapOptions = new googleDart.MapOptions()
-      ..zoom = 15
-      ..center = new googleDart.LatLng(
-          _lastMapPosition.latitude, _lastMapPosition.longitude)
-      ..mapTypeControl = true;
+    if (kIsWeb) {
+      final mapOptions = new googleDart.MapOptions()
+        ..zoom = 15
+        ..center = new googleDart.LatLng(
+            _lastMapPosition.latitude, _lastMapPosition.longitude)
+        ..mapTypeControl = true;
 
-    // ignore: undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory("map-content", (int viewId) {
-      final elem = DivElement()
-        ..id = "map-content"
-        ..style.width = '100%'
-        ..style.height = '100%'
-        ..style.border = 'none';
-      googleDart.GMap map = new googleDart.GMap(elem, mapOptions);
-      
-      map.onTilesloaded.listen((onData) {
-        LocationProvider.of(context).adjustLastIdleLocation(_lastMapPosition);
-      });
-      map.onCenterChanged.listen((onData) {
-        _lastMapPosition = LatLng(map.center.lat, map.center.lng);
-      });
+      // ignore: undefined_prefixed_name
+      ui.platformViewRegistry.registerViewFactory("map-content", (int viewId) {
+        final elem = DivElement()
+          ..id = "map-content"
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.border = 'none';
+        map = new googleDart.GMap(elem, mapOptions);
 
-      map.onIdle.listen((onData) {
-        setState(() {
+        map.onTilesloaded.listen((onData) {
           LocationProvider.of(context).adjustLastIdleLocation(_lastMapPosition);
         });
-      });
+        map.onCenterChanged.listen((onData) {
+          _lastMapPosition = LatLng(map.center.lat, map.center.lng);
+        });
 
-      return elem;
-    });
+        map.onIdle.listen((onData) {
+          setState(() {
+            LocationProvider.of(context)
+                .adjustLastIdleLocation(_lastMapPosition);
+          });
+        });
+
+        return elem;
+      });
+    }
     return Center(
       child: Stack(
         children: <Widget>[
@@ -228,11 +231,12 @@ class MapPickerState extends State<MapPicker> {
                   myLocationEnabled: true,
                   myLocationButtonEnabled: false,
                 ),
-          if (!kIsWeb) _MapFabs(
-            locationEnabled: locationEnabled,
-            onToggleMapTypePressed: _onToggleMapTypePressed,
-            onCurrentLocation: _onCurrentLocation,
-          ),
+          if (!kIsWeb)
+            _MapFabs(
+              locationEnabled: locationEnabled,
+              onToggleMapTypePressed: _onToggleMapTypePressed,
+              onCurrentLocation: _onCurrentLocation,
+            ),
           pin(),
           locationCard(),
         ],
@@ -427,11 +431,15 @@ class MapPickerState extends State<MapPicker> {
     );
   }
 
-  Future moveToCurrentLocation(LatLng currentLocation) async {
+  Future moveToCurrentLocation(LatLng currentLocation) async { 
+    if (kIsWeb) {
+         map.panTo(googleDart.LatLng(currentLocation.latitude, currentLocation.longitude));
+    } else {
     var controller = await mapController.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(
       CameraPosition(target: currentLocation, zoom: 15),
     ));
+    }
   }
 
   var dialogOpen;

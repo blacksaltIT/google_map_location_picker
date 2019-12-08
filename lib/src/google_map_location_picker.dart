@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_map_location_picker/generated/i18n.dart';
 import 'package:google_map_location_picker/src/map.dart';
@@ -377,17 +378,7 @@ class LocationPickerState extends State<LocationPicker> {
   /// Moves the camera to the provided location and updates other UI features to
   /// match the location.
   void moveToLocation(LatLng latLng) {
-    mapKey.currentState.mapController.future.then((controller) {
-      controller.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: latLng,
-            zoom: 15,
-          ),
-        ),
-      );
-    });
-
+    mapKey.currentState.moveToCurrentLocation(latLng);
     //reverseGeocodeLatLng(latLng);
     //getNearbyPlaces(latLng);
   }
@@ -405,7 +396,7 @@ class LocationPickerState extends State<LocationPicker> {
           leading: IconButton(
               icon: Icon(Icons.arrow_back),
               onPressed: () => Navigator.of(context).pop()),
-          iconTheme: IconThemeData(color: Colors.black),
+          iconTheme: Theme.of(context).iconTheme,
           key: appBarKey,
           titleSpacing: 0,
           title: Padding(

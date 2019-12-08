@@ -99,7 +99,7 @@ class SearchInputState extends State {
               ? GestureDetector(
                   child: Icon(
                     Icons.clear,
-                    color: Colors.black,
+                    color: Theme.of(context).accentColor,
                   ),
                   onTap: () {
                     editController.clear();
@@ -118,7 +118,7 @@ class SearchInputState extends State {
         ],
       ),
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4), color: Colors.white),
+          borderRadius: BorderRadius.circular(4), color: Theme.of(context).primaryColor),
     );
   }
 }

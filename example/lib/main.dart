@@ -28,14 +28,29 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      theme: ThemeData(
+          // This is the theme of your application.
+          //
+          // Try running your application with "flutter run". You'll see the
+          // application has a blue toolbar. Then, without quitting the app, try
+          // changing the primarySwatch below to Colors.green and then invoke
+          // "hot reload" (press "r" in the console where you ran "flutter run",
+          // or simply save your changes to "hot reload" in a Flutter IDE).
+          // Notice that the counter didn't reset back to zero; the application
+          // is not restarted.
+          brightness: Brightness.dark,
+          fontFamily: 'Roboto',
+          primaryColor: Colors.red[300],
+          accentColor: Colors.cyan[800],
+          iconTheme: IconThemeData(color: Colors.cyan[800], size: 30)
+    
+          ),
       supportedLocales: const <Locale>[
         Locale('en', ''),
         Locale('ar', ''),
       ],
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('location picker'),
-        ),
+       
         body: Builder(builder: (context) {
           return Center(
             child: AddressPicker(
