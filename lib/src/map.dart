@@ -49,7 +49,7 @@ class MapPickerState extends State<MapPicker> {
   bool locationEnabled = false;
   final formKey = new GlobalKey<FormState>();
   StreamSubscription _appLifecycleListener;
-  googleDart.GMap map;
+  Completer<googleDart.GMap> map = Completer();
 
   void _onToggleMapTypePressed() {
     final MapType nextType =
@@ -127,12 +127,50 @@ class MapPickerState extends State<MapPicker> {
     super.initState();
     handleAppLifecycle();
     _initCurrentLocation();
+    if (kIsWeb)
+      _initMapDiv();
   }
 
   @override
   void dispose() {
     if (_appLifecycleListener != null) _appLifecycleListener.cancel();
     super.dispose();
+  }
+
+  void _initMapDiv() {
+      final mapOptions = new googleDart.MapOptions()
+        ..zoom = 15
+        ..center = new googleDart.LatLng(
+            _lastMapPosition.latitude, _lastMapPosition.longitude)
+        ..mapTypeControl = true;
+
+      // ignore: undefined_prefixed_name
+      ui.platformViewRegistry.registerViewFactory("map-content", (int viewId) {
+        final elem = DivElement()
+          ..id = "map-content"
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.border = 'none';
+        googleDart.GMap googleMap = new googleDart.GMap(elem, mapOptions);
+
+        googleMap.onTilesloaded.listen((onData) {
+          if (!map.isCompleted)
+            map.complete(googleMap);
+          LocationProvider.of(context).adjustLastIdleLocation(_lastMapPosition);
+        });
+        googleMap.onCenterChanged.listen((onData) {
+          _lastMapPosition = LatLng(googleMap.center.lat, googleMap.center.lng);
+        });
+
+        googleMap.onIdle.listen((onData) {
+          setState(() {
+            LocationProvider.of(context)
+                .adjustLastIdleLocation(_lastMapPosition);
+          });
+        });
+
+        return elem;
+      });
   }
 
   @override
@@ -170,39 +208,6 @@ class MapPickerState extends State<MapPicker> {
   }
 
   Widget buildMap() {
-    if (kIsWeb) {
-      final mapOptions = new googleDart.MapOptions()
-        ..zoom = 15
-        ..center = new googleDart.LatLng(
-            _lastMapPosition.latitude, _lastMapPosition.longitude)
-        ..mapTypeControl = true;
-
-      // ignore: undefined_prefixed_name
-      ui.platformViewRegistry.registerViewFactory("map-content", (int viewId) {
-        final elem = DivElement()
-          ..id = "map-content"
-          ..style.width = '100%'
-          ..style.height = '100%'
-          ..style.border = 'none';
-        map = new googleDart.GMap(elem, mapOptions);
-
-        map.onTilesloaded.listen((onData) {
-          LocationProvider.of(context).adjustLastIdleLocation(_lastMapPosition);
-        });
-        map.onCenterChanged.listen((onData) {
-          _lastMapPosition = LatLng(map.center.lat, map.center.lng);
-        });
-
-        map.onIdle.listen((onData) {
-          setState(() {
-            LocationProvider.of(context)
-                .adjustLastIdleLocation(_lastMapPosition);
-          });
-        });
-
-        return elem;
-      });
-    }
     return Center(
       child: Stack(
         children: <Widget>[
@@ -431,14 +436,16 @@ class MapPickerState extends State<MapPicker> {
     );
   }
 
-  Future moveToCurrentLocation(LatLng currentLocation) async { 
+  Future moveToCurrentLocation(LatLng currentLocation) async {
     if (kIsWeb) {
-         map.panTo(googleDart.LatLng(currentLocation.latitude, currentLocation.longitude));
+      var controller = await map.future;
+      controller.panTo(googleDart.LatLng(
+          currentLocation.latitude, currentLocation.longitude));
     } else {
-    var controller = await mapController.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(target: currentLocation, zoom: 15),
-    ));
+      var controller = await mapController.future;
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: currentLocation, zoom: 15),
+      ));
     }
   }
 
