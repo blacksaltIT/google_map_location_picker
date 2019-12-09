@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
 import 'dart:math';
 import 'dart:ui' as ui;
 
@@ -14,7 +15,7 @@ import 'package:google_map_location_picker/src/providers/location_provider.dart'
 import 'package:google_map_location_picker/src/utils/loading_builder.dart';
 import 'package:google_map_location_picker/src/utils/log.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-//import 'package:google_maps/google_maps.dart' as googleDart;
+import 'package:google_maps/google_maps.dart' as googleDart;
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
@@ -49,11 +50,10 @@ class MapPickerState extends State<MapPicker> {
   bool locationEnabled = false;
   final formKey = new GlobalKey<FormState>();
   StreamSubscription _appLifecycleListener;
-  //Completer<googleDart.GMap> map = Completer();
+  Completer<googleDart.GMap> map = Completer();
   StreamSubscription onCenterChanged;
   StreamSubscription onIdle;
   int registryId;
-
 
   void _onToggleMapTypePressed() {
     final MapType nextType =
@@ -131,8 +131,7 @@ class MapPickerState extends State<MapPicker> {
     super.initState();
     handleAppLifecycle();
     _initCurrentLocation();
-   /* if (kIsWeb)
-      _initMapDiv();*/
+    _initMapDiv();
   }
 
   @override
@@ -142,6 +141,42 @@ class MapPickerState extends State<MapPicker> {
     if (onIdle != null) onIdle.cancel();
 
     super.dispose();
+  }
+
+  void _initMapDiv() {
+    final mapOptions = new googleDart.MapOptions()
+      ..zoom = 15
+      ..center = new googleDart.LatLng(
+          _lastMapPosition.latitude, _lastMapPosition.longitude)
+      ..mapTypeControl = true;
+
+    registryId = Random().nextInt(1000);
+
+    // ignore: undefined_prefixed_name
+    ui.platformViewRegistry.registerViewFactory("map-content$registryId",
+        (int viewId) {
+      final elem = DivElement()
+        ..id = "map-content"
+        ..style.width = '100%'
+        ..style.height = '100%'
+        ..style.border = 'none';
+      googleDart.GMap googleMap = new googleDart.GMap(elem, mapOptions);
+
+      onCenterChanged = googleMap.onCenterChanged.listen((onData) {
+        _lastMapPosition = LatLng(googleMap.center.lat, googleMap.center.lng);
+      });
+
+      onIdle = googleMap.onIdle.listen((onData) {
+        if (!map.isCompleted) map.complete(googleMap);
+        if (mounted)
+          setState(() {
+            LocationProvider.of(context)
+                .adjustLastIdleLocation(_lastMapPosition);
+          });
+      });
+
+      return elem;
+    });
   }
 
   @override
@@ -158,11 +193,33 @@ class MapPickerState extends State<MapPicker> {
     );
   }
 
+  googleDart.MapTypeId convertMapType(MapType type) {
+    switch (type) {
+      case MapType.none:
+        return googleDart.MapTypeId.ROADMAP;
+        break;
+      case MapType.normal:
+        return googleDart.MapTypeId.ROADMAP;
+        break;
+      case MapType.satellite:
+        return googleDart.MapTypeId.SATELLITE;
+        break;
+      case MapType.terrain:
+        return googleDart.MapTypeId.TERRAIN;
+        break;
+      case MapType.hybrid:
+        return googleDart.MapTypeId.HYBRID;
+        break;
+    }
+  }
+
   Widget buildMap() {
     return Center(
       child: Stack(
         children: <Widget>[
-           GoogleMap(
+          kIsWeb
+              ? HtmlElementView(viewType: "map-content$registryId")
+              : GoogleMap(
                   onMapCreated: (GoogleMapController controller) {
                     mapController.complete(controller);
                     LocationProvider.of(context)
@@ -332,8 +389,7 @@ class MapPickerState extends State<MapPicker> {
     if (location != null) {
       if (!location.isTypedIn) {
         try {
-          var endPoint = kIsWeb ? 'https://cors-anywhere.herokuapp.com/' : '' +
-              'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
+          var endPoint = 'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
 
           var response = await http.get(endPoint);
 
@@ -386,10 +442,9 @@ class MapPickerState extends State<MapPicker> {
   }
 
   Future moveToCurrentLocation(LatLng currentLocation) async {
-      var controller = await mapController.future;
-      controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: currentLocation, zoom: 15),
-      ));
+    var controller = await map.future;
+    controller.panTo(
+        googleDart.LatLng(currentLocation.latitude, currentLocation.longitude));
   }
 
   var dialogOpen;

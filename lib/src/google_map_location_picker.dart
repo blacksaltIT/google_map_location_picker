@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_map_location_picker/generated/i18n.dart';
-import 'package:google_map_location_picker/src/map.dart';
+import 'package:google_map_location_picker/src/map.dart' 
+  if (dart.library.html) 'package:google_map_location_picker/src/map_web.dart'
+  if (dart.library.io) 'package:google_map_location_picker/src/map.dart';
 import 'package:google_map_location_picker/src/providers/location_provider.dart';
 import 'package:google_map_location_picker/src/rich_suggestion.dart';
 import 'package:google_map_location_picker/src/search_input.dart';
