@@ -53,6 +53,31 @@ class _MyAppState extends State<MyApp> {
        
         body: Builder(builder: (context) {
           return Center(
+            child: FlatButton(child: Text("Location"),onPressed: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return LocationPage();
+              }));
+            },)
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class LocationPage extends StatefulWidget {
+  @override
+  _LocationPageState createState() => _LocationPageState();
+}
+
+class _LocationPageState extends State<LocationPage> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+       
+        body: Builder(builder: (context) {
+          return Center(
             child: AddressPicker(
                   "YOUR_API_KEY",
                   finalRefinement: true,
@@ -60,7 +85,6 @@ class _MyAppState extends State<MyApp> {
                           : gm.LatLng(47.497913, 19.040236))
           );
         }),
-      ),
     );
   }
 }
