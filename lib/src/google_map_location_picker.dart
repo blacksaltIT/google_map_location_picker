@@ -395,9 +395,6 @@ class LocationPickerState extends State<LocationPicker> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () => Navigator.of(context).pop()),
           iconTheme: Theme.of(context).iconTheme,
           key: appBarKey,
           titleSpacing: 0,
