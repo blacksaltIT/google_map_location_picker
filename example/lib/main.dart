@@ -54,7 +54,7 @@ class _MyAppState extends State<MyApp> {
         body: Builder(builder: (context) {
           return Center(
             child: AddressPicker(
-                  "AIzaSyA_KAgHXMvHQ50a7-xVv3pujgIM8x1fHYE",
+                  "YOUR_API_KEY",
                   finalRefinement: true,
                   initialCenter
                           : gm.LatLng(47.497913, 19.040236))
