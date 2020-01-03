@@ -22,7 +22,7 @@ class AddressPicker extends StatefulWidget {
       {Key key,
       this.initialCenter,
       this.finalRefinement = false,
-      this.lifecycleStream = null});
+      this.lifecycleStream});
 
   final String apiKey;
   final LatLng initialCenter;
@@ -38,7 +38,7 @@ class AddressPickerState extends State<AddressPicker> {
   Widget build(BuildContext context) {
     return MultiProvider(
         providers: [
-          ChangeNotifierProvider(builder: (_) => LocationProvider()),
+          ChangeNotifierProvider(create: (_) => LocationProvider()),
         ],
         child: Builder(builder: (context) {
           return LocationPicker(widget.apiKey,
@@ -250,7 +250,7 @@ class LocationPickerState extends State<LocationPicker> {
           locationResult = new LocationResult();
           LocationUtils.updateLocation(responseJson['result'], locationResult);
           locationResult.isTypedIn = true;
-          LocationProvider.of(context).setLastIdleLocation(locationResult);
+          LocationProvider.of(context, listen: false).setLastIdleLocation(locationResult);
         });
 
         moveToLocation(locationResult.latLng);
@@ -353,14 +353,14 @@ class LocationPickerState extends State<LocationPicker> {
         locationResult = new LocationResult();
         LocationUtils.updateLocation(
             responseJson['results'][0], locationResult);
-        LocationProvider.of(context).setLastIdleLocation(locationResult);
+        LocationProvider.of(context, listen: false).setLastIdleLocation(locationResult);
       });
     }
   }
 
   Future reverseGeocodeAddress(String address) async {
     var response = await http.get(
-        "https://maps.googleapis.com/maps/api/geocode/json?address=${address}"
+        "https://maps.googleapis.com/maps/api/geocode/json?address=$address"
         "&key=${widget.apiKey}");
 
     if (response.statusCode == 200) {
@@ -369,7 +369,7 @@ class LocationPickerState extends State<LocationPicker> {
         locationResult = new LocationResult();
         LocationUtils.updateLocation(
             responseJson['results'][0], locationResult);
-        LocationProvider.of(context).setLastIdleLocation(locationResult);
+        LocationProvider.of(context, listen: false).setLastIdleLocation(locationResult);
       });
     }
   }

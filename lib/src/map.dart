@@ -28,7 +28,7 @@ class MapPicker extends StatefulWidget {
       this.initialCenter,
       this.apiKey,
       this.finalRefinement = false,
-      this.lifecycleStream = null})
+      this.lifecycleStream})
       : super(key: key);
 
   @override
@@ -40,7 +40,6 @@ class MapPickerState extends State<MapPicker> {
   static LatLng _defaultPosition = const LatLng(45.521563, -122.677433);
   MapType _currentMapType = MapType.normal;
   LatLng _lastMapPosition;
-  String _address;
   LocationResult _pinedLocationResult;
   bool locationEnabled = false;
   final formKey = new GlobalKey<FormState>();
@@ -53,7 +52,7 @@ class MapPickerState extends State<MapPicker> {
     setState(() => _currentMapType = nextType);
   }
 
-  void _onCurrentLocation() async {
+  Future<void> _onCurrentLocation() async {
     if (!locationEnabled) {
       await AppSettings.openAppSettings();
     } else {
@@ -99,7 +98,7 @@ class MapPickerState extends State<MapPicker> {
     });
   }
 
-  void updateToCurrentPosition() async {
+  Future<void> updateToCurrentPosition() async {
     Position currentPosition;
 
     try {
@@ -148,7 +147,7 @@ class MapPickerState extends State<MapPicker> {
           GoogleMap(
             onMapCreated: (GoogleMapController controller) {
               mapController.complete(controller);
-              LocationProvider.of(context)
+              LocationProvider.of(context, listen: false)
                   .adjustLastIdleLocation(_lastMapPosition);
             },
             initialCameraPosition: CameraPosition(
@@ -161,7 +160,7 @@ class MapPickerState extends State<MapPicker> {
             onCameraIdle: () async {
               print("onCameraIdle#_lastMapPosition = $_lastMapPosition");
               setState(() {
-                LocationProvider.of(context)
+                LocationProvider.of(context, listen: false)
                     .adjustLastIdleLocation(_lastMapPosition);
               });
             },
@@ -209,7 +208,6 @@ class MapPickerState extends State<MapPicker> {
                           ],
                         ),
                         builder: (context, address) {
-                          _address = address;
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -339,8 +337,9 @@ class MapPickerState extends State<MapPicker> {
         _pinedLocationResult = null;
         return location?.address;
       }
-    } else
-      return null;
+    }
+
+    return null;
   }
 
   Center pin() {
