@@ -319,7 +319,7 @@ class MapPickerState extends State<MapPicker> {
           var endPoint =
               'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
 
-          var response = await http.get(endPoint);
+          var response = await http.get(endPoint, headers: await LocationUtils.getAppHeaders());
 
           if (response.statusCode == 200) {
             Map<String, dynamic> responseJson = jsonDecode(response.body);

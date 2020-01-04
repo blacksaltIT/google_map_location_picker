@@ -197,7 +197,9 @@ class LocationPickerState extends State<LocationPicker> {
       endpoint += "&location=${locationResult.latLng.latitude}," +
           "${locationResult.latLng.longitude}";
     }
-    http.get(endpoint).then((response) {
+    LocationUtils.getAppHeaders()
+        .then((headers) => http.get(endpoint, headers: headers))
+        .then((response) {
       if (response.statusCode == 200) {
         Map<String, dynamic> data = jsonDecode(response.body);
         List<dynamic> predictions = data['predictions'];
@@ -243,14 +245,17 @@ class LocationPickerState extends State<LocationPicker> {
         "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
             "&placeid=$placeId";
 
-    http.get(endpoint).then((response) {
+    LocationUtils.getAppHeaders()
+        .then((headers) => http.get(endpoint, headers: headers))
+        .then((response) {
       if (response.statusCode == 200) {
         Map<String, dynamic> responseJson = jsonDecode(response.body);
         setState(() {
           locationResult = new LocationResult();
           LocationUtils.updateLocation(responseJson['result'], locationResult);
           locationResult.isTypedIn = true;
-          LocationProvider.of(context, listen: false).setLastIdleLocation(locationResult);
+          LocationProvider.of(context, listen: false)
+              .setLastIdleLocation(locationResult);
         });
 
         moveToLocation(locationResult.latLng);
@@ -308,10 +313,12 @@ class LocationPickerState extends State<LocationPicker> {
 
   /// Fetches and updates the nearby places to the provided lat,lng
   void getNearbyPlaces(LatLng latLng) {
-    http
-        .get("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
-            "key=${widget.apiKey}&" +
-            "location=${latLng.latitude},${latLng.longitude}&radius=150")
+    LocationUtils.getAppHeaders()
+        .then((headers) => http.get(
+            "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
+                "key=${widget.apiKey}&" +
+                "location=${latLng.latitude},${latLng.longitude}&radius=150",
+            headers: headers))
         .then((response) {
       if (response.statusCode == 200) {
         nearbyPlaces.clear();
@@ -345,7 +352,8 @@ class LocationPickerState extends State<LocationPicker> {
   Future reverseGeocodeLatLng(LatLng latLng) async {
     var response = await http.get(
         "https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}"
-        "&key=${widget.apiKey}");
+        "&key=${widget.apiKey}",
+        headers: await LocationUtils.getAppHeaders());
 
     if (response.statusCode == 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
@@ -353,7 +361,8 @@ class LocationPickerState extends State<LocationPicker> {
         locationResult = new LocationResult();
         LocationUtils.updateLocation(
             responseJson['results'][0], locationResult);
-        LocationProvider.of(context, listen: false).setLastIdleLocation(locationResult);
+        LocationProvider.of(context, listen: false)
+            .setLastIdleLocation(locationResult);
       });
     }
   }
@@ -361,7 +370,8 @@ class LocationPickerState extends State<LocationPicker> {
   Future reverseGeocodeAddress(String address) async {
     var response = await http.get(
         "https://maps.googleapis.com/maps/api/geocode/json?address=$address"
-        "&key=${widget.apiKey}");
+        "&key=${widget.apiKey}",
+        headers: await LocationUtils.getAppHeaders());
 
     if (response.statusCode == 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
@@ -369,7 +379,8 @@ class LocationPickerState extends State<LocationPicker> {
         locationResult = new LocationResult();
         LocationUtils.updateLocation(
             responseJson['results'][0], locationResult);
-        LocationProvider.of(context, listen: false).setLastIdleLocation(locationResult);
+        LocationProvider.of(context, listen: false)
+            .setLastIdleLocation(locationResult);
       });
     }
   }
