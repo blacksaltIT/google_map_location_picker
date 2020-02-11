@@ -41,7 +41,7 @@ class AddressPickerState extends State<AddressPicker> {
   Widget build(BuildContext context) {
     return MultiProvider(
         providers: [
-          ChangeNotifierProvider(builder: (_) => LocationProvider()),
+          ChangeNotifierProvider(create: (_) => LocationProvider()),
         ],
         child: Builder(builder: (context) {
           return LocationPicker(widget.apiKey,
