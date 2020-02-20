@@ -192,7 +192,7 @@ class LocationPickerState extends State<LocationPicker> {
   void autoCompleteSearch(String place) {
     place = place.replaceAll(" ", "+");
     var endpoint =
-        "https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
+        "https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
             "key=${widget.apiKey}&" +
             "input={$place}&sessiontoken=$sessionToken";
 
@@ -243,7 +243,7 @@ class LocationPickerState extends State<LocationPicker> {
     clearOverlay();
 
     String endpoint =
-        "https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
+        "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
             "&placeid=$placeId";
 
     http.get(endpoint).then((response) {
@@ -312,7 +312,7 @@ class LocationPickerState extends State<LocationPicker> {
   /// Fetches and updates the nearby places to the provided lat,lng
   void getNearbyPlaces(LatLng latLng) {
     http
-        .get("https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
+        .get("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
             "key=${widget.apiKey}&" +
             "location=${latLng.latitude},${latLng.longitude}&radius=150")
         .then((response) {
@@ -347,7 +347,7 @@ class LocationPickerState extends State<LocationPicker> {
   /// to be the road name and the locality.
   Future reverseGeocodeLatLng(LatLng latLng) async {
     var response = await http.get(
-        "https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}"
+        "https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}"
         "&key=${widget.apiKey}");
 
     if (response.statusCode == 200) {
@@ -363,7 +363,7 @@ class LocationPickerState extends State<LocationPicker> {
 
   Future reverseGeocodeAddress(String address) async {
     var response = await http.get(
-        "https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/geocode/json?address=${address}"
+        "https://maps.googleapis.com/maps/api/geocode/json?address=${address}"
         "&key=${widget.apiKey}");
 
     if (response.statusCode == 200) {

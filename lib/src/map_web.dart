@@ -389,7 +389,7 @@ class MapPickerState extends State<MapPicker> {
     if (location != null) {
       if (!location.isTypedIn) {
         try {
-          var endPoint = 'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
+          var endPoint = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
 
           var response = await http.get(endPoint);
 

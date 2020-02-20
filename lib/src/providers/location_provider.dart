@@ -5,7 +5,7 @@ import '../model/location_result.dart';
 
 class LocationProvider extends ChangeNotifier {
   static LocationProvider of(BuildContext context) =>
-      Provider.of<LocationProvider>(context);
+      Provider.of<LocationProvider>(context, listen: false);
 
   LocationResult _lastIdleLocation;
 
