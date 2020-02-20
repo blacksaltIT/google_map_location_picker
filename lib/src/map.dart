@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_map_location_picker/generated/i18n.dart';
 import 'package:google_map_location_picker/src/providers/location_provider.dart';
+import 'package:google_map_location_picker/src/utils/cors.dart';
 import 'package:google_map_location_picker/src/utils/loading_builder.dart';
 import 'package:google_map_location_picker/src/utils/log.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -332,7 +333,7 @@ class MapPickerState extends State<MapPicker> {
     if (location != null) {
       if (!location.isTypedIn) {
         try {
-          var endPoint = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}';
+          var endPoint = addCorsPrefix('https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}');
 
           var response = await http.get(endPoint);
 

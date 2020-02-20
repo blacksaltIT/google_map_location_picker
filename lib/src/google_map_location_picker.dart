@@ -10,6 +10,7 @@ import 'package:google_map_location_picker/src/map.dart'
 import 'package:google_map_location_picker/src/providers/location_provider.dart';
 import 'package:google_map_location_picker/src/rich_suggestion.dart';
 import 'package:google_map_location_picker/src/search_input.dart';
+import 'package:google_map_location_picker/src/utils/cors.dart';
 import 'package:google_map_location_picker/src/utils/uuid.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -192,9 +193,9 @@ class LocationPickerState extends State<LocationPicker> {
   void autoCompleteSearch(String place) {
     place = place.replaceAll(" ", "+");
     var endpoint =
-        "https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
+        addCorsPrefix("https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
             "key=${widget.apiKey}&" +
-            "input={$place}&sessiontoken=$sessionToken";
+            "input={$place}&sessiontoken=$sessionToken");
 
     if (locationResult != null) {
       endpoint += "&location=${locationResult.latLng.latitude}," +
@@ -243,8 +244,8 @@ class LocationPickerState extends State<LocationPicker> {
     clearOverlay();
 
     String endpoint =
-        "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
-            "&placeid=$placeId";
+        addCorsPrefix("https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
+            "&placeid=$placeId");
 
     http.get(endpoint).then((response) {
       if (response.statusCode == 200) {
@@ -312,9 +313,9 @@ class LocationPickerState extends State<LocationPicker> {
   /// Fetches and updates the nearby places to the provided lat,lng
   void getNearbyPlaces(LatLng latLng) {
     http
-        .get("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
+        .get(addCorsPrefix("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
             "key=${widget.apiKey}&" +
-            "location=${latLng.latitude},${latLng.longitude}&radius=150")
+            "location=${latLng.latitude},${latLng.longitude}&radius=150"))
         .then((response) {
       if (response.statusCode == 200) {
         nearbyPlaces.clear();
@@ -347,8 +348,8 @@ class LocationPickerState extends State<LocationPicker> {
   /// to be the road name and the locality.
   Future reverseGeocodeLatLng(LatLng latLng) async {
     var response = await http.get(
-        "https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}"
-        "&key=${widget.apiKey}");
+        addCorsPrefix("https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}"
+        "&key=${widget.apiKey}"));
 
     if (response.statusCode == 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
@@ -363,8 +364,8 @@ class LocationPickerState extends State<LocationPicker> {
 
   Future reverseGeocodeAddress(String address) async {
     var response = await http.get(
-        "https://maps.googleapis.com/maps/api/geocode/json?address=${address}"
-        "&key=${widget.apiKey}");
+        addCorsPrefix("https://maps.googleapis.com/maps/api/geocode/json?address=${address}"
+        "&key=${widget.apiKey}"));
 
     if (response.statusCode == 200) {
       Map<String, dynamic> responseJson = jsonDecode(response.body);
