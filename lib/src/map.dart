@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_map_location_picker/generated/i18n.dart';
 import 'package:google_map_location_picker/src/providers/location_provider.dart';
 import 'package:google_map_location_picker/src/utils/cors.dart';
@@ -21,6 +20,7 @@ import 'package:provider/provider.dart';
 
 import 'model/location_result.dart';
 import 'utils/location_utils.dart';
+import 'package:location/location.dart';
 
 class MapPicker extends StatefulWidget {
   final LatLng initialCenter;
@@ -55,7 +55,6 @@ class MapPickerState extends State<MapPicker> {
   StreamSubscription onIdle;
   int registryId;
 
-
   void _onToggleMapTypePressed() {
     final MapType nextType =
         MapType.values[(_currentMapType.index + 1) % MapType.values.length];
@@ -79,10 +78,8 @@ class MapPickerState extends State<MapPicker> {
     if (widget.lifecycleStream != null) {
       _appLifecycleListener = widget.lifecycleStream.listen((state) async {
         if (state == AppLifecycleState.resumed) {
-          locationEnabled = !kIsWeb
-              ? (await Geolocator().checkGeolocationPermissionStatus() ==
-                  GeolocationStatus.granted)
-              : false;
+          locationEnabled =
+              await Location().hasPermission() == PermissionStatus.granted;
 
           if (locationEnabled)
             _onCurrentLocation();
@@ -97,10 +94,8 @@ class MapPickerState extends State<MapPicker> {
   Future<void> _initCurrentLocation() async {
     if (!mounted) return;
 
-    locationEnabled = !kIsWeb
-        ? (await Geolocator().checkGeolocationPermissionStatus() ==
-            GeolocationStatus.granted)
-        : false;
+    locationEnabled =
+        await Location().hasPermission() == PermissionStatus.granted;
 
     _lastMapPosition = widget.initialCenter ?? _defaultPosition;
 
@@ -113,15 +108,16 @@ class MapPickerState extends State<MapPicker> {
   }
 
   void updateToCurrentPosition() async {
-    Position currentPosition;
+  
 
     try {
-      currentPosition = await Geolocator()
-          .getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+  
+          LocationData _locationData = await Location().getLocation();
 
-      d("position = $currentPosition");
+  
+      d("position = $_locationData");
       _lastMapPosition =
-          LatLng(currentPosition.latitude, currentPosition.longitude);
+          LatLng(_locationData.latitude, _locationData.longitude);
     } on PlatformException catch (e) {
       d("_initCurrentLocation#e = $e");
     }
@@ -132,7 +128,7 @@ class MapPickerState extends State<MapPicker> {
     super.initState();
     handleAppLifecycle();
     _initCurrentLocation();
-   /* if (kIsWeb)
+    /* if (kIsWeb)
       _initMapDiv();*/
   }
 
@@ -163,29 +159,29 @@ class MapPickerState extends State<MapPicker> {
     return Center(
       child: Stack(
         children: <Widget>[
-           GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    mapController.complete(controller);
-                    LocationProvider.of(context)
-                        .adjustLastIdleLocation(_lastMapPosition);
-                  },
-                  initialCameraPosition: CameraPosition(
-                    target: _lastMapPosition,
-                    zoom: 11,
-                  ),
-                  onCameraMove: (CameraPosition position) {
-                    _lastMapPosition = position.target;
-                  },
-                  onCameraIdle: () async {
-                    setState(() {
-                      LocationProvider.of(context)
-                          .adjustLastIdleLocation(_lastMapPosition);
-                    });
-                  },
-                  mapType: _currentMapType,
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: false,
-                ),
+          GoogleMap(
+            onMapCreated: (GoogleMapController controller) {
+              mapController.complete(controller);
+              LocationProvider.of(context)
+                  .adjustLastIdleLocation(_lastMapPosition);
+            },
+            initialCameraPosition: CameraPosition(
+              target: _lastMapPosition,
+              zoom: 11,
+            ),
+            onCameraMove: (CameraPosition position) {
+              _lastMapPosition = position.target;
+            },
+            onCameraIdle: () async {
+              setState(() {
+                LocationProvider.of(context)
+                    .adjustLastIdleLocation(_lastMapPosition);
+              });
+            },
+            mapType: _currentMapType,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+          ),
           if (!kIsWeb)
             _MapFabs(
               locationEnabled: locationEnabled,
@@ -333,7 +329,8 @@ class MapPickerState extends State<MapPicker> {
     if (location != null) {
       if (!location.isTypedIn) {
         try {
-          var endPoint = addCorsPrefix('https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}');
+          var endPoint = addCorsPrefix(
+              'https://maps.googleapis.com/maps/api/geocode/json?latlng=${location?.latLng?.latitude},${location?.latLng?.longitude}&key=${widget.apiKey}');
 
           var response = await http.get(endPoint);
 
@@ -386,19 +383,19 @@ class MapPickerState extends State<MapPicker> {
   }
 
   Future moveToCurrentLocation(LatLng currentLocation) async {
-      var controller = await mapController.future;
-      controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: currentLocation, zoom: 15),
-      ));
+    var controller = await mapController.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(target: currentLocation, zoom: 15),
+    ));
   }
 
   var dialogOpen;
 
   Future _checkGeolocationPermission() async {
     var geolocationStatus =
-        await Geolocator().checkGeolocationPermissionStatus();
+        await Location().hasPermission();
 
-    if (geolocationStatus == GeolocationStatus.denied && dialogOpen == null) {
+    if ((geolocationStatus == PermissionStatus.denied || geolocationStatus == PermissionStatus.deniedForever) && dialogOpen == null) {
       d('showDialog');
       dialogOpen = showDialog(
         context: context,
@@ -423,8 +420,7 @@ class MapPickerState extends State<MapPicker> {
           );
         },
       );
-    } else if (geolocationStatus == GeolocationStatus.disabled) {
-    } else if (geolocationStatus == GeolocationStatus.granted) {
+    } else if (geolocationStatus == PermissionStatus.granted) {
       d('GeolocationStatus.granted');
       if (dialogOpen != null) {
         Navigator.of(context, rootNavigator: true).pop();
@@ -434,7 +430,7 @@ class MapPickerState extends State<MapPicker> {
   }
 
   Future _checkGps() async {
-    if (!(await Geolocator().isLocationServiceEnabled())) {
+    if (!(await Location().serviceEnabled())) {
       if (Theme.of(context).platform == TargetPlatform.android) {
         showDialog(
           context: context,

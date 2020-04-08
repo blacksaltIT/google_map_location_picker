@@ -107,6 +107,11 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_web_plugins:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   front_end:
     dependency: transitive
     description:
@@ -114,13 +119,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.18"
-  geolocator:
-    dependency: transitive
-    description:
-      name: geolocator
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "5.1.3"
   glob:
     dependency: transitive
     description:
@@ -128,13 +126,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.7"
-  google_api_availability:
-    dependency: transitive
-    description:
-      name: google_api_availability
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.1"
   google_map_location_picker:
     dependency: "direct dev"
     description:
@@ -198,6 +189,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.17.7"
+  js:
+    dependency: transitive
+    description:
+      name: js
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.6.1+1"
   js_wrapping:
     dependency: transitive
     description:
@@ -212,13 +210,27 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.3.18"
-  location_permissions:
+  location:
     dependency: transitive
     description:
-      name: location_permissions
+      name: location
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.2"
+    version: "3.0.2"
+  location_platform_interface:
+    dependency: transitive
+    description:
+      name: location_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.0"
+  location_web:
+    dependency: transitive
+    description:
+      name: location_web
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.0"
   matcher:
     dependency: transitive
     description:
@@ -268,6 +280,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.4.0"
+  plugin_platform_interface:
+    dependency: transitive
+    description:
+      name: plugin_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.2"
   provider:
     dependency: transitive
     description:
@@ -373,4 +392,4 @@ packages:
     version: "2.1.16"
 sdks:
   dart: ">=2.5.0 <3.0.0"
-  flutter: ">=1.12.1 <2.0.0"
+  flutter: ">=1.12.13+hotfix.5 <2.0.0"
