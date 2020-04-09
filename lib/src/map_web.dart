@@ -296,6 +296,7 @@ class MapPickerState extends State<MapPicker> {
                   ),
                   Spacer(),
                   FloatingActionButton(
+                    backgroundColor: Theme.of(context).dialogBackgroundColor,
                     onPressed: () {
                       LocationResult finalResult = _pinedLocationResult ??
                           locationProvider.lastIdleLocation;
@@ -541,6 +542,7 @@ class _MapFabs extends StatelessWidget {
       child: Column(
         children: <Widget>[
           FloatingActionButton(
+            backgroundColor: Theme.of(context).dialogBackgroundColor,
             onPressed: onToggleMapTypePressed,
             materialTapTargetSize: MaterialTapTargetSize.padded,
             mini: true,
@@ -558,7 +560,7 @@ class _MapFabs extends StatelessWidget {
                   size: 28,
                   color: Colors.white),
               heroTag: "my_location",
-              backgroundColor: locationEnabled ? null : Colors.red),
+              backgroundColor: locationEnabled ? Theme.of(context).dialogBackgroundColor : Colors.red),
         ],
       ),
     );

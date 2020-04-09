@@ -3,10 +3,11 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:google_map_location_picker/generated/i18n.dart';
-import 'package:google_map_location_picker/src/map.dart' 
-  if (dart.library.html) 'package:google_map_location_picker/src/map_web.dart'
-  if (dart.library.io) 'package:google_map_location_picker/src/map.dart';
+import 'package:google_map_location_picker/src/map.dart'
+    if (dart.library.html) 'package:google_map_location_picker/src/map_web.dart'
+    if (dart.library.io) 'package:google_map_location_picker/src/map.dart';
 import 'package:google_map_location_picker/src/providers/location_provider.dart';
 import 'package:google_map_location_picker/src/rich_suggestion.dart';
 import 'package:google_map_location_picker/src/search_input.dart';
@@ -192,8 +193,8 @@ class LocationPickerState extends State<LocationPicker> {
   /// Fetches the place autocomplete list with the query [place].
   void autoCompleteSearch(String place) {
     place = place.replaceAll(" ", "+");
-    var endpoint =
-        addCorsPrefix("https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
+    var endpoint = addCorsPrefix(
+        "https://maps.googleapis.com/maps/api/place/autocomplete/json?" +
             "key=${widget.apiKey}&" +
             "input={$place}&sessiontoken=$sessionToken");
 
@@ -243,8 +244,8 @@ class LocationPickerState extends State<LocationPicker> {
   void decodeAndSelectPlace(String placeId) {
     clearOverlay();
 
-    String endpoint =
-        addCorsPrefix("https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
+    String endpoint = addCorsPrefix(
+        "https://maps.googleapis.com/maps/api/place/details/json?key=${widget.apiKey}" +
             "&placeid=$placeId");
 
     http.get(endpoint).then((response) {
@@ -313,9 +314,10 @@ class LocationPickerState extends State<LocationPicker> {
   /// Fetches and updates the nearby places to the provided lat,lng
   void getNearbyPlaces(LatLng latLng) {
     http
-        .get(addCorsPrefix("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
-            "key=${widget.apiKey}&" +
-            "location=${latLng.latitude},${latLng.longitude}&radius=150"))
+        .get(addCorsPrefix(
+            "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
+                "key=${widget.apiKey}&" +
+                "location=${latLng.latitude},${latLng.longitude}&radius=150"))
         .then((response) {
       if (response.statusCode == 200) {
         nearbyPlaces.clear();
@@ -347,8 +349,8 @@ class LocationPickerState extends State<LocationPicker> {
   /// This method gets the human readable name of the location. Mostly appears
   /// to be the road name and the locality.
   Future reverseGeocodeLatLng(LatLng latLng) async {
-    var response = await http.get(
-        addCorsPrefix("https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}"
+    var response = await http.get(addCorsPrefix(
+        "https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}"
         "&key=${widget.apiKey}"));
 
     if (response.statusCode == 200) {
@@ -363,8 +365,8 @@ class LocationPickerState extends State<LocationPicker> {
   }
 
   Future reverseGeocodeAddress(String address) async {
-    var response = await http.get(
-        addCorsPrefix("https://maps.googleapis.com/maps/api/geocode/json?address=${address}"
+    var response = await http.get(addCorsPrefix(
+        "https://maps.googleapis.com/maps/api/geocode/json?address=${address}"
         "&key=${widget.apiKey}"));
 
     if (response.statusCode == 200) {
@@ -395,24 +397,24 @@ class LocationPickerState extends State<LocationPicker> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          iconTheme: Theme.of(context).iconTheme,
-          key: appBarKey,
-          titleSpacing: 0,
-          title: Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: SearchInput(
-              (input) => searchPlace(input),
-              key: searchInputKey,
-            ),
-          ),
-        ),
-        body: MapPicker(
-          initialCenter: widget.initialCenter,
-          key: mapKey,
-          apiKey: widget.apiKey,
-          finalRefinement: widget.finalRefinement,
-          lifecycleStream: widget.lifecycleStream,
-        ));
+        body: Column(children: [
+      SearchInput(
+        (input) => searchPlace(input),
+        key: appBarKey,
+      ),
+      Expanded(
+          child: Neumorphic(
+              margin: EdgeInsets.all(10),
+              style: NeumorphicStyle(shape: NeumorphicShape.convex),
+              boxShape: NeumorphicBoxShape.roundRect(
+                  borderRadius: BorderRadius.circular(12)),
+              child: MapPicker(
+                initialCenter: widget.initialCenter,
+                key: mapKey,
+                apiKey: widget.apiKey,
+                finalRefinement: widget.finalRefinement,
+                lifecycleStream: widget.lifecycleStream,
+              )))
+    ]));
   }
 }

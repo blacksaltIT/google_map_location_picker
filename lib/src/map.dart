@@ -108,13 +108,9 @@ class MapPickerState extends State<MapPicker> {
   }
 
   void updateToCurrentPosition() async {
-  
-
     try {
-  
-          LocationData _locationData = await Location().getLocation();
+      LocationData _locationData = await Location().getLocation();
 
-  
       d("position = $_locationData");
       _lastMapPosition =
           LatLng(_locationData.latitude, _locationData.longitude);
@@ -236,6 +232,7 @@ class MapPickerState extends State<MapPicker> {
                   ),
                   Spacer(),
                   FloatingActionButton(
+                    backgroundColor: Theme.of(context).dialogBackgroundColor,
                     onPressed: () {
                       LocationResult finalResult = _pinedLocationResult ??
                           locationProvider.lastIdleLocation;
@@ -359,7 +356,7 @@ class MapPickerState extends State<MapPicker> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Icon(Icons.place, size: 56),
+          Icon(Icons.place, size: 56, color: Theme.of(context).dialogBackgroundColor,),
           Container(
             decoration: ShapeDecoration(
               shadows: [
@@ -392,10 +389,11 @@ class MapPickerState extends State<MapPicker> {
   var dialogOpen;
 
   Future _checkGeolocationPermission() async {
-    var geolocationStatus =
-        await Location().hasPermission();
+    var geolocationStatus = await Location().hasPermission();
 
-    if ((geolocationStatus == PermissionStatus.denied || geolocationStatus == PermissionStatus.deniedForever) && dialogOpen == null) {
+    if ((geolocationStatus == PermissionStatus.denied ||
+            geolocationStatus == PermissionStatus.deniedForever) &&
+        dialogOpen == null) {
       d('showDialog');
       dialogOpen = showDialog(
         context: context,
@@ -483,6 +481,7 @@ class _MapFabs extends StatelessWidget {
       child: Column(
         children: <Widget>[
           FloatingActionButton(
+            backgroundColor: Theme.of(context).dialogBackgroundColor,
             onPressed: onToggleMapTypePressed,
             materialTapTargetSize: MaterialTapTargetSize.padded,
             mini: true,
@@ -500,7 +499,9 @@ class _MapFabs extends StatelessWidget {
                   size: 28,
                   color: Colors.white),
               heroTag: "my_location",
-              backgroundColor: locationEnabled ? null : Colors.red),
+              backgroundColor: locationEnabled
+                  ? Theme.of(context).dialogBackgroundColor
+                  : Colors.red),
         ],
       ),
     );
